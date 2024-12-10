@@ -137,30 +137,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   return (
     <div style={{ marginLeft }} className="my-4">
       <div className="bg-stone-100 p-4 rounded-lg">
-        <div className="text-sm text-gray-600 mb-2 flex items-center justify-between">
-          <div>
-            <span>By {currentComment.authorId}</span>
-            <span className="mx-2">•</span>
-            <span>{formatDate(currentComment.createdAt)}</span>
-            {currentComment.updatedAt !== currentComment.createdAt && (
-              <span className="ml-2 text-gray-500">(edited)</span>
-            )}
-          </div>
-          {currentComment.children?.length > 0 && (
-            <button
-              onClick={() => setShowChildren(!showChildren)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              {showChildren ? (
-                <ChevronUp size={20} />
-              ) : (
-                <ChevronDown size={20} />
-              )}
-            </button>
-          )}
-        </div>
-
-        {isEditing ? (
+      {isEditing ? (
           <div className="mt-2">
             <textarea
               value={editContent}
@@ -189,8 +166,32 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             </div>
           </div>
         ) : (
-          <div className="text-gray-800">{currentComment.content}</div>
+          <div className="text-black text-left">{currentComment.content}</div>
         )}
+        <div className="text-xs text-stone-600 font-medium mb-2 flex items-center justify-between">
+          <div>
+            <span>By {currentComment.authorId}</span>
+            <span className="mx-2">•</span>
+            <span>{formatDate(currentComment.createdAt)}</span>
+            {currentComment.updatedAt !== currentComment.createdAt && (
+              <span className="ml-2 text-gray-500">(edited)</span>
+            )}
+          </div>
+          {currentComment.children?.length > 0 && (
+            <button
+              onClick={() => setShowChildren(!showChildren)}
+              className="text-black-500 hover:text-gray-700"
+            >
+              {showChildren ? (
+                <ChevronUp size={20} />
+              ) : (
+                <ChevronDown size={20} />
+              )}
+            </button>
+          )}
+        </div>
+
+        
 
         <div className="mt-3 flex items-center gap-4">
           <div className="flex items-center gap-3">
@@ -230,7 +231,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              className="text-sm text-black hover:text-blue-800 flex items-center gap-1"
             >
               <Reply size={16} />
               Reply

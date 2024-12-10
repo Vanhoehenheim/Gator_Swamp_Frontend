@@ -101,7 +101,7 @@ const CommentSection = ({ postId }) => {
 
   return (
     <div className="border-t pt-6">
-      <h2 className="text-xl font-bold mb-4">Comments</h2>
+      <h2 className="text-2xl font-extrabold mb-4">Comments</h2>
 
       <form onSubmit={handleComment} className="mb-6">
         <textarea
@@ -113,7 +113,7 @@ const CommentSection = ({ postId }) => {
         />
         <button
           type="submit"
-          className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="mt-2 px-4 font-bold py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-600"
         >
           Post Comment
         </button>

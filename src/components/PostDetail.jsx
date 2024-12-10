@@ -96,7 +96,7 @@ const PostDetail = () => {
   };
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <article className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+      <article className="bg-stone-50 rounded-lg p-6 shadow-sm border border-gray-100">
         <header className="mb-4">
           <h1 className="text-3xl font-doto font-bold text-gray-900 mb-2">
             {post.Title}

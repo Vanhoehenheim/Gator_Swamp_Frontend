@@ -22,7 +22,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="bg-stone-200 flex items-center justify-center font-doto">
+    <div className="bg-stone-100 flex items-center justify-center font-doto">
       <form onSubmit={handleSubmit} className="w-full max-w-2xl p-12">
         <h1 className="text-6xl font-bold text-black mb-2 text-center">
           Gator Swamp
@@ -32,7 +32,7 @@ export const LoginForm = () => {
         </h2>
         
         {error && (
-          <div className="mb-8 p-4 bg-white border border-black text-black text-center font-semibold">
+          <div className="mb-8 p-4 bg-white border marin border-black text-black text-center font-semibold">
             {error}
           </div>
         )}
@@ -45,7 +45,7 @@ export const LoginForm = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 bg-white border-2 border-black text-black text-lg focus:outline-none"
+            className="w-full p-3 bg-white border-2 rounded-full border-stone-300 text-black text-lg focus:outline-none"
             required
           />
         </div>
@@ -58,14 +58,14 @@ export const LoginForm = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 bg-white border-2 border-black text-black text-lg focus:outline-none"
+            className="w-full p-3 bg-white border-2 rounded-full border-stone-300 text-black text-lg focus:outline-none"
             required
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-black text-white font-bold text-xl py-3 hover:bg-gray-900 focus:outline-none border-2 border-black transition-colors"
+          className="w-1/3 bg-black text-white font-bold text-xl py-3 hover:bg-gray-900 focus:outline-none border-2 border-black transition-colors"
         >
           ENTER
         </button>

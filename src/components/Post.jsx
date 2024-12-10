@@ -12,7 +12,7 @@ const Post = ({ post }) => {
   };
 
   return (
-    <article onClick={handlePostClick} className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <article onClick={handlePostClick} className="bg-stone-50 rounded-lg p-6 shadow-sm border border-stone-300">
       <header className="mb-4">
         <h2 className="text-2xl font-doto font-bold text-gray-900 mb-2">
           {post.Title}

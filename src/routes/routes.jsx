@@ -4,6 +4,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import Home from '../components/Home';
 import Profile from '../components/Profile';
+import Messages from '../components/Messages';
 import App from '../App';
 import PostDetail from '../components/PostDetail';
 
@@ -37,6 +38,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/messages",
+        element: (
+          <ProtectedRoute>
+            <Messages />
           </ProtectedRoute>
         )
       },
