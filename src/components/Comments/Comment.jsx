@@ -1,8 +1,18 @@
 // src/components/Comments/Comment.jsx
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Reply, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, Edit2, Check, X } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import {
+  Reply,
+  ChevronDown,
+  ChevronUp,
+  ThumbsUp,
+  ThumbsDown,
+  Edit2,
+  Check,
+  X,
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import VoteConfetti from "../animations/VoteConfetti";
 
 const Comment = ({ comment, onReply, postId, level = 0 }) => {
   const { userId } = useAuth();
@@ -14,7 +24,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   const [childComments, setChildComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentComment, setCurrentComment] = useState(comment);
-  const [voteState, setVoteState] = useState(null); 
+  const [voteState, setVoteState] = useState(null);
 
   const canEdit = userId === comment.authorId;
 
@@ -52,42 +62,105 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
 
   const handleVote = async (isUpvote) => {
     // If trying to vote the same way again, ignore
-    if ((isUpvote && voteState === 'up') || (!isUpvote && voteState === 'down')) {
+    if (
+      (isUpvote && voteState === "up") ||
+      (!isUpvote && voteState === "down")
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`http://localhost:8080/comment/vote`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId,
           commentId: comment.id,
-          isUpvote
+          isUpvote,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.Code === 'DUPLICATE') {
+        if (data.Code === "DUPLICATE") {
           // If duplicate vote, we need to remove the previous vote first
           return;
         }
-        throw new Error('Failed to vote');
+        throw new Error("Failed to vote");
       }
-      
-      // Update vote state and comment data
-      setVoteState(isUpvote ? 'up' : 'down');
-      setCurrentComment(data);
 
+      // Update vote state and comment data
+      setVoteState(isUpvote ? "up" : "down");
+      setCurrentComment(data);
     } catch (err) {
-      console.error('Voting error:', err);
+      console.error("Voting error:", err);
     }
   };
 
+  const VotingSection = ({ currentComment, handleVote }) => {
+    const [showUpvoteConfetti, setShowUpvoteConfetti] = useState(false);
+    const [showDownvoteConfetti, setShowDownvoteConfetti] = useState(false);
+
+    const handleVoteWithConfetti = (isUpvote) => {
+      if (isUpvote) {
+        setShowUpvoteConfetti(true);
+        setTimeout(() => setShowUpvoteConfetti(false), 500);
+      } else {
+        setShowDownvoteConfetti(true);
+        setTimeout(() => setShowDownvoteConfetti(false), 500);
+      }
+      handleVote(isUpvote);
+    };
+
+    return (
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <button
+            onClick={() => handleVoteWithConfetti(true)}
+            className={`flex items-center gap-1 text-sm ${
+              voteState === "up"
+                ? "text-blue-600 font-medium"
+                : "text-gray-500 hover:text-blue-600"
+            }`}
+            disabled={voteState === "up"}
+          >
+            <ThumbsUp
+              size={16}
+              className={voteState === "up" ? "fill-current" : ""}
+            />
+            <span>{currentComment.upvotes}</span>
+            <VoteConfetti isActive={showUpvoteConfetti} color="#2563eb" />
+          </button>
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => handleVoteWithConfetti(false)}
+            className={`flex items-center gap-1 text-sm ${
+              voteState === "down"
+                ? "text-red-600 font-medium"
+                : "text-gray-500 hover:text-red-600"
+            }`}
+            disabled={voteState === "down"}
+          >
+            <ThumbsDown
+              size={16}
+              className={voteState === "down" ? "fill-current" : ""}
+            />
+            <span>{currentComment.downvotes}</span>
+            <VoteConfetti isActive={showDownvoteConfetti} color="#dc2626" />
+          </button>
+        </div>
+
+        <span className="text-sm text-gray-500">
+          Karma: {currentComment.karma}
+        </span>
+      </div>
+    );
+  };
 
   const handleEdit = async () => {
     if (editContent.trim() === comment.content) {
@@ -96,30 +169,30 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     }
 
     if (!canEdit) {
-      console.error('Unauthorized to edit this comment');
+      console.error("Unauthorized to edit this comment");
       return;
     }
 
     try {
       const response = await fetch(`http://localhost:8080/comment`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           CommentID: comment.id,
           AuthorID: comment.authorId,
-          Content: editContent.trim()
+          Content: editContent.trim(),
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to edit comment');
-      
+      if (!response.ok) throw new Error("Failed to edit comment");
+
       const updatedComment = await response.json();
       setCurrentComment(updatedComment);
       setIsEditing(false);
     } catch (err) {
-      console.error('Edit error:', err);
+      console.error("Edit error:", err);
     }
   };
 
@@ -137,7 +210,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   return (
     <div style={{ marginLeft }} className="my-4">
       <div className="bg-stone-100 p-4 rounded-lg">
-      {isEditing ? (
+        {isEditing ? (
           <div className="mt-2">
             <textarea
               value={editContent}
@@ -191,42 +264,11 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           )}
         </div>
 
-        
-
         <div className="mt-3 flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleVote(true)}
-              className={`flex items-center gap-1 text-sm ${
-                voteState === 'up' 
-                  ? 'text-blue-600 font-medium' 
-                  : 'text-gray-500 hover:text-blue-600'
-              }`}
-              disabled={voteState === 'up'}
-            >
-              <ThumbsUp size={16} 
-                className={voteState === 'up' ? 'fill-current' : ''} 
-              />
-              <span>{currentComment.upvotes}</span>
-            </button>
-            <button
-              onClick={() => handleVote(false)}
-              className={`flex items-center gap-1 text-sm ${
-                voteState === 'down' 
-                  ? 'text-red-600 font-medium' 
-                  : 'text-gray-500 hover:text-red-600'
-              }`}
-              disabled={voteState === 'down'}
-            >
-              <ThumbsDown size={16} 
-                className={voteState === 'down' ? 'fill-current' : ''} 
-              />
-              <span>{currentComment.downvotes}</span>
-            </button>
-            <span className="text-sm text-gray-500">
-              Karma: {currentComment.karma}
-            </span>
-          </div>
+          <VotingSection
+            currentComment={currentComment}
+            handleVote={handleVote}
+          />
 
           <div className="flex items-center gap-2">
             <button
@@ -237,13 +279,14 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
               Reply
             </button>
             {canEdit && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Edit2 size={16} />
-              Edit
-            </button>)}
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                <Edit2 size={16} />
+                Edit
+              </button>
+            )}
           </div>
         </div>
 

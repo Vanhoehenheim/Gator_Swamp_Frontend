@@ -20,16 +20,21 @@ const CommentSection = ({ postId }) => {
         `http://localhost:8080/comment/post?postId=${postId}`
       );
       if (!response.ok) throw new Error("Failed to fetch comments");
-      //   it might be possible that repsone is null if no comments are found
-      // if response is null then we can set comments to empty array
-
-      const allComments = await response.json();
-
-      // Filter top-level comments (ones without parentId)
-      const topLevelComments = allComments.filter(
+  
+      const data = await response.json();
+      
+      // If response is null or undefined, set comments to empty array
+      if (!data) {
+        setComments([]);
+        return;
+      }
+  
+      // If we have comments, then filter for top-level ones
+      const topLevelComments = data.filter(
         (comment) => !("parentId" in comment)
       );
       setComments(topLevelComments);
+  
     } catch (err) {
       console.error("Error fetching comments:", err);
       setError("Failed to load comments");

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Post from './Post';
+import GatorRelax from '../assets/gatorRelax.svg';
 
 const Home = () => {
   const { userId, getUserFeed } = useAuth();
@@ -70,10 +71,16 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-stone-100 py-8">
       <div className="max-w-3xl mx-auto px-4">
-        <h1 className="text-4xl font-doto font-bold text-gray-900 mb-8 text-center">
+      <div className="flex items-center justify-between w-full">
+          <div className="flex-1" />
+          <h1 className="text-4xl font-doto font-bold text-gray-900 mb-8 text-center">
           {posts.length > 0 ? "Today's Feed" : "Recent Posts"}
-        </h1>
+          </h1>
 
+          <div className="flex-1 flex justify-end">
+            <img src={GatorRelax} alt="Gator Relaxing Logo" className="size-40" />
+          </div>
+        </div>
         <div className="space-y-6">
           {posts.map(post => (
             <Post key={post.ID} post={post} />

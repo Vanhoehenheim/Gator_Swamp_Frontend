@@ -13,6 +13,7 @@ const PostDetail = () => {
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [voteState, setVoteState] = useState(null);
 
   useEffect(() => {
     const fetchPostDetails = async () => {
@@ -41,12 +42,13 @@ const PostDetail = () => {
 
   const handleVote = async (isUpvote) => {
     try {
-      const response = await fetch(`http://localhost:8080/posts/${postId}/vote`, {
+      const response = await fetch(`http://localhost:8080/post/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          postId,
           userId,
           isUpvote
         }),
@@ -56,6 +58,12 @@ const PostDetail = () => {
       
       const updatedPost = await response.json();
       setPost(updatedPost);
+      // Update the vote state for visual feedback
+      if ((isUpvote && voteState === 'up') || (!isUpvote && voteState === 'down')) {
+        setVoteState(null);
+      } else {
+        setVoteState(isUpvote ? 'up' : 'down');
+      }
     } catch (err) {
       console.error('Voting error:', err);
     }
@@ -113,21 +121,35 @@ const PostDetail = () => {
         </div>
 
         <div className="flex items-center space-x-4 mb-6">
-          <button 
-            onClick={() => handleVote(true)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
-          >
-            <ThumbsUp size={20} />
-            <span>{post.Upvotes}</span>
-          </button>
-          <button 
-            onClick={() => handleVote(false)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-red-600"
-          >
-            <ThumbsDown size={20} />
-            <span>{post.Downvotes}</span>
-          </button>
-        </div>
+      <button 
+        onClick={() => handleVote(true)}
+        className={`flex items-center space-x-2 ${
+          voteState === 'up' 
+            ? 'text-blue-600 font-medium' 
+            : 'text-gray-600 hover:text-blue-600'
+        }`}
+      >
+        <ThumbsUp 
+          size={20} 
+          className={voteState === 'up' ? 'fill-current' : ''} 
+        />
+        <span>{post.Upvotes}</span>
+      </button>
+      <button 
+        onClick={() => handleVote(false)}
+        className={`flex items-center space-x-2 ${
+          voteState === 'down' 
+            ? 'text-red-600 font-medium' 
+            : 'text-gray-600 hover:text-red-600'
+        }`}
+      >
+        <ThumbsDown 
+          size={20} 
+          className={voteState === 'down' ? 'fill-current' : ''} 
+        />
+        <span>{post.Downvotes}</span>
+      </button>
+    </div>
 
         <CommentSection postId={postId} />
       </article>
