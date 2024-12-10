@@ -7,6 +7,8 @@ import Profile from '../components/Profile';
 import Messages from '../components/Messages';
 import App from '../App';
 import PostDetail from '../components/PostDetail';
+import CreateSubreddit from '../components/subreddit/CreateSubreddit';
+import SubredditView from '../components/subreddit/SubredditView';
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +56,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PostDetail />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/create-subreddit",
+        element: (
+          <ProtectedRoute>
+            <CreateSubreddit />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/r/:subredditId",
+        element: (
+          <ProtectedRoute>
+            <SubredditView />
           </ProtectedRoute>
         )
       }

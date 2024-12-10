@@ -14,7 +14,7 @@ const Post = ({ post }) => {
   return (
     <article onClick={handlePostClick} className="bg-stone-50 rounded-lg p-6 shadow-sm border border-stone-300">
       <header className="mb-4">
-        <h2 className="text-2xl font-doto font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-doto font-bold text-stone-900 mb-2">
           {post.Title}
         </h2>
         <div className="text-sm text-gray-600 font-doto">
@@ -24,7 +24,7 @@ const Post = ({ post }) => {
         </div>
       </header>
 
-      <div className="prose font-doto text-gray-800 mb-4 whitespace-pre-wrap">
+      <div className="prose font-doto font-semibold text-stone-900 mb-4 whitespace-pre-wrap">
         {post.Content}
       </div>
 

@@ -48,7 +48,7 @@ export const LoginForm = () => {
         )}
 
         <div className="mb-6">
-          <label className="block text-black font-bold text-lg mb-2">
+          <label className="block font-bold text-black text-lg mb-2">
             Email Address
           </label>
           <input
