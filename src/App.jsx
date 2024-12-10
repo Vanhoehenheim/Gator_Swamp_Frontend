@@ -11,7 +11,7 @@ import { Outlet } from 'react-router-dom';
 function App() {
   return (
     <AuthProvider>
-      <div className="bg-gray-100">
+      <div className="bg-stone-100 mx-0">
         {/* Add your header/navigation here */}
         <main className="container mx-auto">
           <Outlet />

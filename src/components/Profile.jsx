@@ -97,7 +97,7 @@ const Profile = () => {
           <div className="space-y-4">
             {profileData.recentPosts.map(post => (
               <div key={post.id} className="border-b pb-4">
-                <Link to={`/posts/${post.id}`} className="block hover:bg-gray-50">
+                <Link to={`/posts/${post.id}`} className="block hover:bg-stone-100">
                   <h3 className="font-medium">{post.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{post.content}</p>
                   <div className="text-xs text-gray-500 mt-2">

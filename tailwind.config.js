@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'doto': ['Doto', 'serif']
+        'doto': ['Doto', 'serif'],
       }
     },
   },

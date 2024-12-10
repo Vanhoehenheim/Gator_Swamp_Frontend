@@ -5,6 +5,7 @@ import { RegisterForm } from '../components/auth/RegisterForm';
 import Home from '../components/Home';
 import Profile from '../components/Profile';
 import App from '../App';
+import PostDetail from '../components/PostDetail';
 
 export const router = createBrowserRouter([
   {
@@ -13,7 +14,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Navigate to="/login" replace /> // Redirect root to login
+        element: <Navigate to="/login" replace />
       },
       {
         path: "/login",
@@ -36,6 +37,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/posts/:postId",
+        element: (
+          <ProtectedRoute>
+            <PostDetail />
           </ProtectedRoute>
         )
       }

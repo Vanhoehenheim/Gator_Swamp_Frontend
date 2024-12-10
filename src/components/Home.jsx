@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { format } from 'date-fns';
+import Post from './Post';
 
 const Home = () => {
   const { userId, getUserFeed } = useAuth();
@@ -51,14 +51,9 @@ const Home = () => {
     }
   }, [userId, getUserFeed]);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return format(date, 'MMMM d, yyyy • h:mm a');
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen bg-stone-100">
         <div className="text-xl text-gray-800 font-doto">Loading posts...</div>
       </div>
     );
@@ -66,57 +61,22 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen bg-stone-100">
         <div className="text-xl text-red-600 font-doto">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50">
-      <div className="mx-auto">
+    <div className="min-h-screen bg-stone-100 py-8">
+      <div className="max-w-3xl mx-auto px-4">
         <h1 className="text-4xl font-doto font-bold text-gray-900 mb-8 text-center">
           {posts.length > 0 ? "Today's Feed" : "Recent Posts"}
         </h1>
 
         <div className="space-y-6">
           {posts.map(post => (
-            <article 
-              key={post.ID} 
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-100"
-            >
-              <header className="mb-4">
-                <h2 className="text-2xl font-doto font-bold text-gray-900 mb-2">
-                  {post.Title}
-                </h2>
-                <div className="text-sm text-gray-600 font-doto">
-                  <span>Author : {post.AuthorUsername}</span>
-                  <span className="mx-2">•</span>
-                  <span>{formatDate(post.CreatedAt)}</span>
-                </div>
-              </header>
-
-              <div className="font-doto font-semibold text-black mb-4 whitespace-pre-wrap">
-                {post.Content}
-              </div>
-
-              <footer className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center space-x-6 text-sm text-gray-600 font-doto">
-                  <div className="flex items-center space-x-2">
-                    <span>Upvotes: {post.Upvotes}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span>Downvotes: {post.Downvotes}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span>Karma: {post.Karma}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span>Subreddit: {post.SubredditName}</span>
-                  </div>
-                </div>
-              </footer>
-            </article>
+            <Post key={post.ID} post={post} />
           ))}
 
           {posts.length === 0 && (

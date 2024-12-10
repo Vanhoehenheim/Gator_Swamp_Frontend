@@ -22,7 +22,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="bg-gray-50 flex items-center justify-center font-doto">
+    <div className="bg-stone-200 flex items-center justify-center font-doto">
       <form onSubmit={handleSubmit} className="w-full max-w-2xl p-12">
         <h1 className="text-6xl font-bold text-black mb-2 text-center">
           Gator Swamp
