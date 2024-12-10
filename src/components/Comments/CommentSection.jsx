@@ -96,7 +96,7 @@ const CommentSection = ({ postId }) => {
 
   if (loading) {
     return (
-      <div className="text-center py-4 text-gray-600">Loading comments...</div>
+      <div className="text-center py-4 text-gray-600">loading comments...</div>
     );
   }
 
@@ -105,22 +105,22 @@ const CommentSection = ({ postId }) => {
   }
 
   return (
-    <div className="border-t pt-6">
-      <h2 className="text-2xl font-extrabold mb-4">Comments</h2>
+    <div className="border-t pt-6 lowercase">
+      <h2 className="text-lg mb-4">comments</h2>
 
       <form onSubmit={handleComment} className="mb-6">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          className="w-full p-3 border rounded-lg resize-none"
+          className="w-full p-3 border rounded-lg resize-none text-sm"
           rows="3"
-          placeholder="Add a comment..."
+          placeholder="add a comment..."
         />
         <button
           type="submit"
-          className="mt-2 px-4 font-bold py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-600"
+          className="mt-2 px-4 font-semibold py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-600"
         >
-          Post Comment
+          post comment
         </button>
       </form>
 
@@ -135,7 +135,7 @@ const CommentSection = ({ postId }) => {
         ))}
         {comments.length === 0 && (
           <div className="text-center py-4 text-gray-600">
-            No comments yet. Be the first to comment!
+            no comments yet. be the first to comment!
           </div>
         )}
       </div>

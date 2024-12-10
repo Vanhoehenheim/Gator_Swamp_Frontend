@@ -103,20 +103,20 @@ const PostDetail = () => {
     return format(date, 'MMMM d, yyyy • h:mm a');
   };
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 lowercase">
       <article className="bg-stone-50 rounded-lg p-6 shadow-sm border border-gray-100">
         <header className="mb-4">
           <h1 className="text-3xl font-doto font-bold text-gray-900 mb-2">
             {post.Title}
           </h1>
-          <div className="text-sm text-gray-600">
+          <div className="text-xs text-stone-300">
             <span>By {post.AuthorUsername}</span>
             <span className="mx-2">•</span>
             <span>{formatDate(post.CreatedAt)}</span>
           </div>
         </header>
 
-        <div className="prose font-doto text-gray-800 mb-6 whitespace-pre-wrap">
+        <div className="prose text-gray-800 mb-6 whitespace-pre-wrap">
           {post.Content}
         </div>
 
@@ -130,7 +130,7 @@ const PostDetail = () => {
         }`}
       >
         <ThumbsUp 
-          size={20} 
+          size={15} 
           className={voteState === 'up' ? 'fill-current' : ''} 
         />
         <span>{post.Upvotes}</span>
@@ -144,7 +144,7 @@ const PostDetail = () => {
         }`}
       >
         <ThumbsDown 
-          size={20} 
+          size={15} 
           className={voteState === 'down' ? 'fill-current' : ''} 
         />
         <span>{post.Downvotes}</span>

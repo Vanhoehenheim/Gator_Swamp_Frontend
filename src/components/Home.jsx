@@ -74,7 +74,7 @@ const Home = () => {
       <div className="flex items-center justify-between w-full">
           <div className="flex-1" />
           <h1 className="text-4xl font-doto font-bold text-gray-900 mb-8 text-center">
-          {posts.length > 0 ? "Today's Feed" : "Recent Posts"}
+          {posts.length > 0 ? "today's feed" : "recent posts"}
           </h1>
 
           <div className="flex-1 flex justify-end">
@@ -88,7 +88,7 @@ const Home = () => {
 
           {posts.length === 0 && (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <p className="text-gray-600 font-doto">No posts available</p>
+              <p className="text-gray-600">No posts available</p>
             </div>
           )}
         </div>

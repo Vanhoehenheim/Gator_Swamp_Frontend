@@ -116,11 +116,11 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     };
 
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 lowercase text-xs">
         <div className="relative">
           <button
             onClick={() => handleVoteWithConfetti(true)}
-            className={`flex items-center gap-1 text-sm ${
+            className={`flex items-center gap-1 ${
               voteState === "up"
                 ? "text-blue-600 font-medium"
                 : "text-gray-500 hover:text-blue-600"
@@ -128,7 +128,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             disabled={voteState === "up"}
           >
             <ThumbsUp
-              size={16}
+              size={15}
               className={voteState === "up" ? "fill-current" : ""}
             />
             <span>{currentComment.upvotes}</span>
@@ -139,7 +139,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
         <div className="relative">
           <button
             onClick={() => handleVoteWithConfetti(false)}
-            className={`flex items-center gap-1 text-sm ${
+            className={`flex items-center gap-1 ${
               voteState === "down"
                 ? "text-red-600 font-medium"
                 : "text-gray-500 hover:text-red-600"
@@ -147,7 +147,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             disabled={voteState === "down"}
           >
             <ThumbsDown
-              size={16}
+              size={15}
               className={voteState === "down" ? "fill-current" : ""}
             />
             <span>{currentComment.downvotes}</span>
@@ -155,7 +155,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           </button>
         </div>
 
-        <span className="text-sm text-gray-500">
+        <span className=" text-gray-500">
           Karma: {currentComment.karma}
         </span>
       </div>
@@ -209,7 +209,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
 
   return (
     <div style={{ marginLeft }} className="my-4">
-      <div className="bg-stone-100 p-4 rounded-lg">
+      <div className="bg-stone-100 p-4 rounded-lg text-sm">
         {isEditing ? (
           <div className="mt-2">
             <textarea
@@ -241,7 +241,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
         ) : (
           <div className="text-black text-left">{currentComment.content}</div>
         )}
-        <div className="text-xs text-stone-600 font-medium mb-2 flex items-center justify-between">
+        <div className="text-xs text-stone-300 font-medium mb-2 flex items-center justify-between">
           <div>
             <span>By {currentComment.authorId}</span>
             <span className="mx-2">•</span>
@@ -273,25 +273,25 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="text-sm text-black hover:text-blue-800 flex items-center gap-1"
+              className="text-xs text-black hover:text-blue-800 flex items-center gap-1"
             >
               <Reply size={16} />
-              Reply
+              reply
             </button>
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
                 <Edit2 size={16} />
-                Edit
+                edit
               </button>
             )}
           </div>
         </div>
 
         {isReplying && (
-          <form onSubmit={handleSubmitReply} className="mt-4">
+          <form onSubmit={handleSubmitReply} className="mt-4 text-xs">
             <textarea
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
@@ -302,9 +302,9 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             <div className="flex gap-2 mt-2">
               <button
                 type="submit"
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
               >
-                Post Reply
+                post reply
               </button>
               <button
                 type="button"
@@ -312,9 +312,9 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
                   setIsReplying(false);
                   setReplyContent("");
                 }}
-                className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-xs"
               >
-                Cancel
+                cancel
               </button>
             </div>
           </form>

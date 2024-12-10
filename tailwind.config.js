@@ -7,7 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'doto': ['Doto', 'serif'],
+        'geist-mono': ['Geist Mono', 'monospace'],
+        'doto': ['Doto', 'sans-serif'],  // Changed to sans-serif since that's what you used in CSS
       }
     },
   },
