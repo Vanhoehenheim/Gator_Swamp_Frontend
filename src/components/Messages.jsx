@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { MessageCircle, Send, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userProfiles, setUserProfiles] = useState({});
+  const pollingInterval = useRef(null);
 
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -23,10 +24,48 @@ const Messages = () => {
     return format(date, 'MMM d, h:mm a');
   };
 
+  const markMessagesAsRead = async (partnerId) => {
+    try {
+      const unreadMessages = messages.filter(
+        msg => msg.fromId === partnerId && 
+              msg.toId === userId && 
+              !msg.isRead
+      );
+
+      if (unreadMessages.length === 0) return;
+
+      const response = await fetch('http://localhost:8080/messages/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fromId: partnerId,
+          toId: userId,
+          messageIds: unreadMessages.map(msg => msg.id)
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server response:', errorData);
+        throw new Error('Failed to mark messages as read');
+      }
+
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.fromId === partnerId && msg.toId === userId
+            ? { ...msg, isRead: true }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Error marking messages as read:', err);
+    }
+  };
+
   const fetchMessages = useCallback(async () => {
     try {
-      console.log('Attempting to fetch messages for userId:', userId);
-      
       const response = await fetch(`http://localhost:8080/messages?userId=${userId}`, {
         method: 'GET',
         headers: {
@@ -35,23 +74,25 @@ const Messages = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Response not ok:', response.status, errorText);
         throw new Error(`Failed to fetch messages: ${response.status}`);
       }
 
       const responseData = await response.json();
-      console.log('Fetched response data:', responseData);
-      
-      // Extract messages from the response
       const allMessages = Array.isArray(responseData) ? responseData : [];
-      console.log('Extracted messages:', allMessages);
 
-      setMessages(allMessages);
+      const normalizedMessages = allMessages.map(msg => ({
+        id: msg.ID || msg.id,
+        fromId: msg.FromID || msg.fromId,
+        toId: msg.ToID || msg.toId,
+        content: msg.Content || msg.content,
+        createdAt: msg.CreatedAt || msg.createdAt,
+        isRead: msg.IsRead || msg.isRead
+      }));
 
-      // Group messages by conversation partner
-      const conversationsMap = allMessages.reduce((acc, message) => {
-        const partnerId = message.FromID === userId ? message.ToID : message.FromID;
+      setMessages(normalizedMessages);
+
+      const conversationsMap = normalizedMessages.reduce((acc, message) => {
+        const partnerId = message.fromId === userId ? message.toId : message.fromId;
         if (!acc[partnerId]) {
           acc[partnerId] = [];
         }
@@ -59,10 +100,9 @@ const Messages = () => {
         return acc;
       }, {});
 
-      // Sort messages within each conversation by date
       Object.keys(conversationsMap).forEach(partnerId => {
         conversationsMap[partnerId].sort((a, b) => 
-          new Date(a.CreatedAt) - new Date(b.CreatedAt)
+          new Date(a.createdAt) - new Date(b.createdAt)
         );
       });
 
@@ -73,43 +113,61 @@ const Messages = () => {
           latestMessage: messages[messages.length - 1]
         }))
         .sort((a, b) => 
-          new Date(b.latestMessage.CreatedAt) - new Date(a.latestMessage.CreatedAt)
+          new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt)
         );
 
-      console.log('Processed conversations:', conversationsArray);
       setConversations(conversationsArray);
 
-      // Fetch user profiles for all conversation partners
-      const uniqueUserIds = [...new Set(conversationsArray.map(c => c.partnerId))];
-      const profiles = {};
-      for (const id of uniqueUserIds) {
-        try {
-          const profile = await fetch(`http://localhost:8080/user/profile?userId=${id}`, {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-          if (profile.ok) {
-            profiles[id] = await profile.json();
-          }
-        } catch (err) {
-          console.error(`Failed to fetch profile for user ${id}:`, err);
-        }
+      if (selectedUser) {
+        markMessagesAsRead(selectedUser);
       }
-      setUserProfiles(profiles);
+
+      return conversationsArray;
     } catch (err) {
       console.error('Error in fetchMessages:', err);
       setError('Failed to load messages: ' + err.message);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  }, [userId, getUserProfile]);
+  }, [userId, selectedUser]);
 
   useEffect(() => {
     if (userId) {
-      fetchMessages();
+      fetchMessages().then(async (conversations) => {
+        const uniqueUserIds = [...new Set(conversations.map(c => c.partnerId))];
+        const profiles = {};
+        for (const id of uniqueUserIds) {
+          try {
+            const profile = await fetch(`http://localhost:8080/user/profile?userId=${id}`, {
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+            if (profile.ok) {
+              profiles[id] = await profile.json();
+            }
+          } catch (err) {
+            console.error(`Failed to fetch profile for user ${id}:`, err);
+          }
+        }
+        setUserProfiles(profiles);
+        setLoading(false);
+      });
+
+      pollingInterval.current = setInterval(fetchMessages, 3000);
+
+      return () => {
+        if (pollingInterval.current) {
+          clearInterval(pollingInterval.current);
+        }
+      };
     }
   }, [userId, fetchMessages]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      markMessagesAsRead(selectedUser);
+    }
+  }, [selectedUser]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -122,9 +180,9 @@ const Messages = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          FromID: userId,
-          ToID: selectedUser,
-          Content: newMessage
+          fromId: userId,
+          toId: selectedUser,
+          content: newMessage
         })
       });
 
@@ -132,8 +190,6 @@ const Messages = () => {
         throw new Error('Failed to send message');
       }
 
-      const sentMessage = await response.json();
-      setMessages([...messages, sentMessage]);
       setNewMessage('');
       await fetchMessages();
     } catch (err) {
@@ -162,7 +218,6 @@ const Messages = () => {
     <div className="max-w-6xl mx-auto p-4 h-screen">
       <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-2rem)]">
         <div className="flex h-full">
-          {/* Conversations List */}
           <div className={`w-1/3 border-r ${selectedUser ? 'hidden md:block' : 'w-full'}`}>
             <div className="p-4 border-b">
               <h1 className="text-2xl font-bold font-doto">Messages</h1>
@@ -173,7 +228,7 @@ const Messages = () => {
                   const latestMessage = convoMessages[convoMessages.length - 1];
                   const partnerProfile = userProfiles[partnerId];
                   const unreadCount = convoMessages.filter(
-                    msg => msg.ToID === userId && !msg.IsRead
+                    msg => msg.toId === userId && !msg.isRead
                   ).length;
 
                   return (
@@ -190,11 +245,11 @@ const Messages = () => {
                             {partnerProfile?.username || 'Loading...'}
                           </h3>
                           <p className="text-sm text-gray-600 truncate">
-                            {latestMessage.Content}
+                            {latestMessage.content}
                           </p>
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatMessageDate(latestMessage.CreatedAt)}
+                          {formatMessageDate(latestMessage.createdAt)}
                         </div>
                       </div>
                       {unreadCount > 0 && (
@@ -215,7 +270,6 @@ const Messages = () => {
             </div>
           </div>
 
-          {/* Message Thread or Empty State */}
           {selectedUser ? (
             <div className="flex-1 flex flex-col">
               <div className="p-4 border-b flex items-center">
@@ -233,30 +287,30 @@ const Messages = () => {
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages
                   .filter(msg => 
-                    (msg.FromID === userId && msg.ToID === selectedUser) ||
-                    (msg.FromID === selectedUser && msg.ToID === userId)
+                    (msg.fromId === userId && msg.toId === selectedUser) ||
+                    (msg.fromId === selectedUser && msg.toId === userId)
                   )
                   .map(message => (
                     <div
-                      key={message.ID}
+                      key={message.id}
                       className={`flex ${
-                        message.FromID === userId ? 'justify-end' : 'justify-start'
+                        message.fromId === userId ? 'justify-end' : 'justify-start'
                       }`}
                     >
                       <div
                         className={`max-w-[70%] p-3 rounded-lg ${
-                          message.FromID === userId
+                          message.fromId === userId
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-900'
                         }`}
                       >
-                        <p className="font-doto">{message.Content}</p>
+                        <p className="font-doto">{message.content}</p>
                         <div className="flex items-center justify-end mt-1 space-x-1">
                           <span className="text-xs opacity-75">
-                            {formatMessageDate(message.CreatedAt)}
+                            {formatMessageDate(message.createdAt)}
                           </span>
-                          {message.FromID === userId && (
-                            message.IsRead ? <CheckCheck className="w-4 h-4" /> : <Check className="w-4 h-4" />
+                          {message.fromId === userId && (
+                            message.isRead ? <CheckCheck className="w-4 h-4" /> : <Check className="w-4 h-4" />
                           )}
                         </div>
                       </div>
