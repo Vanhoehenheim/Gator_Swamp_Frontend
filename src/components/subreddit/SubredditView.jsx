@@ -1,14 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import Post from '../Post';
+import { Users, PenSquare } from 'lucide-react';
 
 const SubredditView = () => {
   const { subredditId } = useParams();
+  const { userId, user, getUserProfile } = useAuth();
   const [subreddit, setSubreddit] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMember, setIsMember] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState('');
 
+  // Check initial membership status from user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await getUserProfile();
+        if (userData && userData.subredditID) {
+          setIsMember(userData.subredditID.includes(subredditId));
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+      }
+    };
+
+    fetchUserData();
+  }, [subredditId, getUserProfile]);
+
+  // Check membership status from context user data as backup
+  useEffect(() => {
+    if (user && user.subredditID) {
+      setIsMember(user.subredditID.includes(subredditId));
+    }
+  }, [user, subredditId]);
+
+  // Fetch subreddit data and posts
   useEffect(() => {
     const fetchSubredditData = async () => {
       try {
@@ -35,6 +65,44 @@ const SubredditView = () => {
       fetchSubredditData();
     }
   }, [subredditId]);
+
+  const handleJoinSubreddit = async () => {
+    setJoinError('');
+    try {
+      setIsJoining(true);
+      const response = await fetch('http://localhost:8080/subreddit/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subredditId: subredditId,
+          userId: userId
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.Code === 'DUPLICATE') {
+          setJoinError('You are already a member of this subreddit');
+        } else {
+          setJoinError(data.Message || 'Failed to join subreddit');
+        }
+        return;
+      }
+
+      // Fetch fresh user data to update membership status
+      const userData = await getUserProfile();
+      if (userData && userData.subredditID) {
+        setIsMember(userData.subredditID.includes(subredditId));
+      }
+    } catch (err) {
+      setJoinError('An error occurred while joining the subreddit');
+    } finally {
+      setIsJoining(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -64,8 +132,40 @@ const SubredditView = () => {
     <div className="min-h-screen bg-stone-100 py-8">
       <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold mb-2 font-doto">{subreddit.Name}</h1>
-          <p className="text-gray-600">{subreddit.Description}</p>
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold font-doto">{subreddit.Name}</h1>
+              <p className="text-gray-600 mt-2">{subreddit.Description}</p>
+            </div>
+            <div className="flex items-center space-x-2 text-gray-600">
+              <Users className="w-5 h-5" />
+              <span>{subreddit.Members || 0} members</span>
+            </div>
+          </div>
+
+          {joinError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {joinError}
+            </div>
+          )}
+
+          {isMember ? (
+            <button 
+              className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={() => {/* Create post functionality will go here */}}
+            >
+              <PenSquare className="w-5 h-5" />
+              <span>Create Post</span>
+            </button>
+          ) : (
+            <button 
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              onClick={handleJoinSubreddit}
+              disabled={isJoining}
+            >
+              {isJoining ? 'Joining...' : 'Join Subreddit'}
+            </button>
+          )}
         </div>
 
         <div className="space-y-6">
