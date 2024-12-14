@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import Post from "../Post";
 import { Users, PenSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProfileButton from "../ProfileButton";
 
 const SubredditView = () => {
   const navigate = useNavigate();
@@ -129,15 +130,16 @@ const SubredditView = () => {
   if (!subreddit) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl text-gray-600">Subreddit not found</div>
+        <div className="text-xl text-gray-600">subreddit not found</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-stone-100 py-8">
+      <ProfileButton />
       <div className="max-w-3xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white lowercase rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold font-doto">{subreddit.Name}</h1>

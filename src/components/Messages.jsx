@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import { MessageCircle, Send, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import ProfileButton from './ProfileButton';
 
 const Messages = () => {
   const location = useLocation();
@@ -230,7 +231,8 @@ const Messages = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 h-screen">
+    <div className="max-w-6xl mx-auto p-4 h-screen py-12">
+      <ProfileButton />
       <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-2rem)]">
         <div className="flex h-full">
           <div className={`w-1/3 border-r ${selectedUser ? 'hidden md:block' : 'w-full'}`}>
