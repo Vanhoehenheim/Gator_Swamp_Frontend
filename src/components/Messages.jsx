@@ -34,24 +34,27 @@ const Messages = () => {
 
       if (unreadMessages.length === 0) return;
 
-      const response = await fetch('http://localhost:8080/messages/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fromId: partnerId,
-          toId: userId,
-          messageIds: unreadMessages.map(msg => msg.id)
-        })
-      });
+      // Make a separate API call for each unread message
+      await Promise.all(unreadMessages.map(async (msg) => {
+        const response = await fetch('http://localhost:8080/messages/read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messageId: msg.id,
+            userId: userId
+          })
+        });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Server response:', errorData);
-        throw new Error('Failed to mark messages as read');
-      }
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('Server response:', errorData);
+          throw new Error('Failed to mark message as read');
+        }
+      }));
 
+      // Update local state after all messages are marked as read
       setMessages(prevMessages =>
         prevMessages.map(msg =>
           msg.fromId === partnerId && msg.toId === userId
