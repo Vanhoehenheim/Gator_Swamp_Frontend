@@ -11,4 +11,5 @@ body {
   height: 100vh;
   padding-top: 0;
   letter-spacing: 0.025em;
+  text-transform: lowercase;
 }
