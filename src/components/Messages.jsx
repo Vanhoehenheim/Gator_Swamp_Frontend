@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 import { MessageCircle, Send, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Messages = () => {
+  const location = useLocation();
   const { userId, getUserProfile } = useAuth();
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -13,6 +15,13 @@ const Messages = () => {
   const [error, setError] = useState(null);
   const [userProfiles, setUserProfiles] = useState({});
   const pollingInterval = useRef(null);
+
+  // Set initial selected user from navigation state
+  useEffect(() => {
+    if (location.state?.initialSelectedUser) {
+      setSelectedUser(location.state.initialSelectedUser);
+    }
+  }, [location.state]);
 
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -34,27 +43,24 @@ const Messages = () => {
 
       if (unreadMessages.length === 0) return;
 
-      // Make a separate API call for each unread message
-      await Promise.all(unreadMessages.map(async (msg) => {
-        const response = await fetch('http://localhost:8080/messages/read', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messageId: msg.id,
-            userId: userId
-          })
-        });
+      const response = await fetch('http://localhost:8080/messages/read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fromId: partnerId,
+          toId: userId,
+          messageIds: unreadMessages.map(msg => msg.id)
+        })
+      });
 
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Server response:', errorData);
-          throw new Error('Failed to mark message as read');
-        }
-      }));
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server response:', errorData);
+        throw new Error('Failed to mark messages as read');
+      }
 
-      // Update local state after all messages are marked as read
       setMessages(prevMessages =>
         prevMessages.map(msg =>
           msg.fromId === partnerId && msg.toId === userId
@@ -78,9 +84,6 @@ const Messages = () => {
 
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.status}`);
-        const errorText = await response.text();
-        console.error('response not ok:', response.status, errorText);
-        throw new Error(`failed to fetch messages: ${response.status}`);
       }
 
       const responseData = await response.json();
@@ -140,6 +143,12 @@ const Messages = () => {
     if (userId) {
       fetchMessages().then(async (conversations) => {
         const uniqueUserIds = [...new Set(conversations.map(c => c.partnerId))];
+        
+        // Add initialSelectedUser to the list of profiles to fetch if it exists
+        if (location.state?.initialSelectedUser) {
+          uniqueUserIds.push(location.state.initialSelectedUser);
+        }
+        
         const profiles = {};
         for (const id of uniqueUserIds) {
           try {
@@ -167,7 +176,7 @@ const Messages = () => {
         }
       };
     }
-  }, [userId, fetchMessages]);
+  }, [userId, fetchMessages, location.state]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -193,13 +202,13 @@ const Messages = () => {
       });
 
       if (!response.ok) {
-        throw new Error('failed to send message');
+        throw new Error('Failed to send message');
       }
 
       setNewMessage('');
       await fetchMessages();
     } catch (err) {
-      setError('failed to send message');
+      setError('Failed to send message');
       console.error(err);
     }
   };
