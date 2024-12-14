@@ -19,7 +19,7 @@ const CommentSection = ({ postId }) => {
       const response = await fetch(
         `http://localhost:8080/comment/post?postId=${postId}`
       );
-      if (!response.ok) throw new Error("Failed to fetch comments");
+      if (!response.ok) throw new Error("failed to fetch comments");
   
       const data = await response.json();
       

@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
             'Content-Type': 'application/json',
           }
         });        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user profile');
+          throw new Error('failed to fetch user profile');
         }
         
         const userData = await userResponse.json();
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user feed');
+        throw new Error('failed to fetch user feed');
       }
 
       return await response.json();
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user profile');
+        throw new Error('failed to fetch user profile');
       }
 
       return await response.json();

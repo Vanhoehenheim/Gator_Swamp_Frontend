@@ -36,16 +36,16 @@ const Messages = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response not ok:', response.status, errorText);
-        throw new Error(`Failed to fetch messages: ${response.status}`);
+        console.error('response not ok:', response.status, errorText);
+        throw new Error(`failed to fetch messages: ${response.status}`);
       }
 
       const responseData = await response.json();
-      console.log('Fetched response data:', responseData);
+      console.log('fetched response data:', responseData);
       
       // Extract messages from the response
       const allMessages = Array.isArray(responseData) ? responseData : [];
-      console.log('Extracted messages:', allMessages);
+      console.log('extracted messages:', allMessages);
 
       setMessages(allMessages);
 
@@ -76,7 +76,7 @@ const Messages = () => {
           new Date(b.latestMessage.CreatedAt) - new Date(a.latestMessage.CreatedAt)
         );
 
-      console.log('Processed conversations:', conversationsArray);
+      console.log('processed conversations:', conversationsArray);
       setConversations(conversationsArray);
 
       // Fetch user profiles for all conversation partners
@@ -93,13 +93,13 @@ const Messages = () => {
             profiles[id] = await profile.json();
           }
         } catch (err) {
-          console.error(`Failed to fetch profile for user ${id}:`, err);
+          console.error(`failed to fetch profile for user ${id}:`, err);
         }
       }
       setUserProfiles(profiles);
     } catch (err) {
-      console.error('Error in fetchMessages:', err);
-      setError('Failed to load messages: ' + err.message);
+      console.error('error in fetchMessages:', err);
+      setError('failed to load messages: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ const Messages = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        throw new Error('failed to send message');
       }
 
       const sentMessage = await response.json();
@@ -137,7 +137,7 @@ const Messages = () => {
       setNewMessage('');
       await fetchMessages();
     } catch (err) {
-      setError('Failed to send message');
+      setError('failed to send message');
       console.error(err);
     }
   };

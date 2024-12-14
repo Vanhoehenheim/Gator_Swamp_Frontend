@@ -39,7 +39,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
                 `http://localhost:8080/comment?commentId=${childId}`
               );
               if (!response.ok)
-                throw new Error("Failed to fetch child comment");
+                throw new Error("failed to fetch child comment");
               return response.json();
             })
           );
