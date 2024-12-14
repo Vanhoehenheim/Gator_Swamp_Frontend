@@ -18,7 +18,7 @@ const Post = ({ post }) => {
           {post.Title}
         </h2>
         <div className="text-xs text-gray-300">
-          <span>by author {post.AuthorID}</span>
+          <span>by {post.AuthorUsername}</span>
           <span className="mx-2">•</span>
           <span>{formatDate(post.CreatedAt)}</span>
         </div>
