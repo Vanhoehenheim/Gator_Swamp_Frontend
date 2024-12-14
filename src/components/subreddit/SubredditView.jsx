@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import Post from '../Post';
-import { Users, PenSquare } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import Post from "../Post";
+import { Users, PenSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const SubredditView = () => {
+  const navigate = useNavigate();
   const { subredditId } = useParams();
   const { userId, user, getUserProfile } = useAuth();
   const [subreddit, setSubreddit] = useState(null);
@@ -13,7 +15,7 @@ const SubredditView = () => {
   const [error, setError] = useState(null);
   const [isMember, setIsMember] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [joinError, setJoinError] = useState('');
+  const [joinError, setJoinError] = useState("");
 
   // Check initial membership status from user data
   useEffect(() => {
@@ -24,7 +26,7 @@ const SubredditView = () => {
           setIsMember(userData.subredditID.includes(subredditId));
         }
       } catch (err) {
-        console.error('Error fetching user profile:', err);
+        console.error("Error fetching user profile:", err);
       }
     };
 
@@ -44,14 +46,18 @@ const SubredditView = () => {
       try {
         setLoading(true);
         // Fetch subreddit details
-        const subredditResponse = await fetch(`http://localhost:8080/subreddit?id=${subredditId}`);
-        if (!subredditResponse.ok) throw new Error('Failed to load subreddit');
+        const subredditResponse = await fetch(
+          `http://localhost:8080/subreddit?id=${subredditId}`
+        );
+        if (!subredditResponse.ok) throw new Error("Failed to load subreddit");
         const subredditData = await subredditResponse.json();
         setSubreddit(subredditData);
 
         // Fetch subreddit posts
-        const postsResponse = await fetch(`http://localhost:8080/post?subredditId=${subredditId}`);
-        if (!postsResponse.ok) throw new Error('Failed to load posts');
+        const postsResponse = await fetch(
+          `http://localhost:8080/post?subredditId=${subredditId}`
+        );
+        if (!postsResponse.ok) throw new Error("Failed to load posts");
         const postsData = await postsResponse.json();
         setPosts(postsData);
       } catch (err) {
@@ -67,27 +73,27 @@ const SubredditView = () => {
   }, [subredditId]);
 
   const handleJoinSubreddit = async () => {
-    setJoinError('');
+    setJoinError("");
     try {
       setIsJoining(true);
-      const response = await fetch('http://localhost:8080/subreddit/members', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8080/subreddit/members", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           subredditId: subredditId,
-          userId: userId
+          userId: userId,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.Code === 'DUPLICATE') {
-          setJoinError('You are already a member of this subreddit');
+        if (data.Code === "DUPLICATE") {
+          setJoinError("You are already a member of this subreddit");
         } else {
-          setJoinError(data.Message || 'Failed to join subreddit');
+          setJoinError(data.Message || "Failed to join subreddit");
         }
         return;
       }
@@ -98,7 +104,7 @@ const SubredditView = () => {
         setIsMember(userData.subredditID.includes(subredditId));
       }
     } catch (err) {
-      setJoinError('An error occurred while joining the subreddit');
+      setJoinError("An error occurred while joining the subreddit");
     } finally {
       setIsJoining(false);
     }
@@ -150,32 +156,32 @@ const SubredditView = () => {
           )}
 
           {isMember ? (
-            <button 
+            <button
+              onClick={() => navigate(`/r/${subredditId}/post/create`)}
               className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-              onClick={() => {/* Create post functionality will go here */}}
             >
               <PenSquare className="w-5 h-5" />
-              <span>Create Post</span>
+              <span>create post</span>
             </button>
           ) : (
-            <button 
+            <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               onClick={handleJoinSubreddit}
               disabled={isJoining}
             >
-              {isJoining ? 'Joining...' : 'Join Subreddit'}
+              {isJoining ? "Joining..." : "Join Subreddit"}
             </button>
           )}
         </div>
 
         <div className="space-y-6">
           {posts.length > 0 ? (
-            posts.map(post => (
-              <Post key={post.ID} post={post} />
-            ))
+            posts.map((post) => <Post key={post.ID} post={post} />)
           ) : (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <p className="text-gray-600 font-doto">No posts in this subreddit yet</p>
+              <p className="text-gray-600 font-doto">
+                no posts in this subreddit yet
+              </p>
             </div>
           )}
         </div>

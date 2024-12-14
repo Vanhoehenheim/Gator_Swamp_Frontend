@@ -256,7 +256,7 @@ const Messages = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="font-bold font-doto">
+                          <h3 className="font-bold">
                             {partnerProfile?.username || 'Loading...'}
                           </h3>
                           <p className="text-sm text-gray-600 truncate">
@@ -294,7 +294,7 @@ const Messages = () => {
                 >
                   <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h2 className="text-xl font-bold font-doto">
+                <h2 className="text-xl font-bold">
                   {userProfiles[selectedUser]?.username || 'Loading...'}
                 </h2>
               </div>
@@ -319,7 +319,7 @@ const Messages = () => {
                             : 'bg-gray-100 text-gray-900'
                         }`}
                       >
-                        <p className="font-doto">{message.content}</p>
+                        <p className="">{message.content}</p>
                         <div className="flex items-center justify-end mt-1 space-x-1">
                           <span className="text-xs opacity-75">
                             {formatMessageDate(message.createdAt)}
@@ -339,8 +339,8 @@ const Messages = () => {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-doto"
+                    placeholder="type a message..."
+                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="submit"
@@ -356,7 +356,7 @@ const Messages = () => {
             <div className="hidden md:flex flex-1 items-center justify-center">
               <div className="text-center text-gray-500">
                 <MessageCircle className="w-16 h-16 mx-auto mb-4" />
-                <p className="font-doto">Select a conversation to start messaging</p>
+                <p className="">Select a conversation to start messaging</p>
               </div>
             </div>
           )}

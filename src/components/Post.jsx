@@ -18,7 +18,7 @@ const Post = ({ post }) => {
           {post.Title}
         </h2>
         <div className="text-xs text-gray-300">
-          <span>By Author {post.AuthorID}</span>
+          <span>by author {post.AuthorID}</span>
           <span className="mx-2">•</span>
           <span>{formatDate(post.CreatedAt)}</span>
         </div>
@@ -31,13 +31,13 @@ const Post = ({ post }) => {
       <footer className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center space-x-6 text-xs text-gray-600">
           <div className="flex items-center space-x-2">
-            <span>Upvotes: {post.Upvotes}</span>
+            <span>upvotes: {post.Upvotes}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span>Downvotes: {post.Downvotes}</span>
+            <span>downvotes: {post.Downvotes}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span>Karma: {post.Karma}</span>
+            <span>karma: {post.Karma}</span>
           </div>
         </div>
       </footer>

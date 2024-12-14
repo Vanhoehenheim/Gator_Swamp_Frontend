@@ -142,7 +142,7 @@ const Profile = () => {
 
       {/* User's Subreddit Memberships */}
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Your Subreddit Memberships</h2>
+        <h2 className="text-xl font-semibold mb-4">your subreddit memberships</h2>
         <div className="flex flex-wrap gap-2">
           {profileData?.subredditName && profileData.subredditName.length > 0 ? (
             profileData.subredditName.map((name, index) => (
@@ -155,7 +155,7 @@ const Profile = () => {
               </Link>
             ))
           ) : (
-            <p className="text-gray-500">No subreddit memberships yet</p>
+            <p className="text-gray-500">no subreddit memberships yet</p>
           )}
         </div>
       </div>
@@ -163,7 +163,7 @@ const Profile = () => {
       {/* Browse All Subreddits Section */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Browse All Subreddits</h2>
+          <h2 className="text-xl font-semibold">browse all subreddits</h2>
           <button
             onClick={() => setShowAllSubreddits(!showAllSubreddits)}
             className="text-gray-500 hover:text-gray-700"
@@ -196,7 +196,7 @@ const Profile = () => {
       {/* Browse Users Section */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Start a Conversation</h2>
+          <h2 className="text-xl font-semibold">start a conversation</h2>
           <button
             onClick={() => setShowAllUsers(!showAllUsers)}
             className="text-gray-500 hover:text-gray-700"
@@ -229,7 +229,7 @@ const Profile = () => {
 
       {/* Recent Activity Section */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <h2 className="text-xl font-semibold mb-4">recent activity</h2>
         {profileData?.recentPosts?.length > 0 ? (
           <div className="space-y-4">
             {profileData.recentPosts.map(post => (
@@ -245,7 +245,7 @@ const Profile = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No recent activity</p>
+          <p className="text-gray-500">no recent activity!</p>
         )}
       </div>
     </div>
