@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const CreatePost = () => {
-  const { userId } = useAuth();
+  const { userId, authFetch } = useAuth();
   const { subredditId } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -19,7 +19,7 @@ const CreatePost = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/post', {
+      const response = await authFetch('http://localhost:8080/post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

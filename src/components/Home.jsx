@@ -5,19 +5,42 @@ import GatorRelax from '../assets/gatorRelax.svg';
 import ProfileButton from './ProfileButton';
 
 const Home = () => {
-  const { userId, getUserFeed } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Create getUserFeed function locally since it's not provided by the context
+  const getUserFeed = async () => {
+    try {
+      const response = await authFetch(`http://localhost:8080/user/feed?userId=${currentUser.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user feed');
+      }
+      
+      return await response.json();
+    } catch (err) {
+      console.error('Error fetching user feed:', err);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
+        console.log("Fetching posts for user:", currentUser);
+        
         const feedData = await getUserFeed();
         
         if (!feedData || feedData.length === 0) {
-          const recentResponse = await fetch('http://localhost:8080/posts/recent', {
+          const recentResponse = await authFetch('http://localhost:8080/posts/recent', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -46,10 +69,13 @@ const Home = () => {
       }
     };
   
-    if (userId) {
+    if (currentUser && currentUser.id) {
       fetchPosts();
+    } else {
+      setError('No user information available');
+      setLoading(false);
     }
-  }, [userId, getUserFeed]);
+  }, [currentUser, authFetch]);
 
   if (loading) {
     return (

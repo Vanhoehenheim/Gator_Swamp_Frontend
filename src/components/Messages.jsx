@@ -7,7 +7,7 @@ import ProfileButton from './ProfileButton';
 
 const Messages = () => {
   const location = useLocation();
-  const { userId, getUserProfile } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -16,6 +16,7 @@ const Messages = () => {
   const [error, setError] = useState(null);
   const [userProfiles, setUserProfiles] = useState({});
   const pollingInterval = useRef(null);
+  const userId = currentUser?.id;
 
   // Set initial selected user from navigation state
   useEffect(() => {
@@ -44,7 +45,7 @@ const Messages = () => {
 
       if (unreadMessages.length === 0) return;
 
-      const response = await fetch('http://localhost:8080/messages/read', {
+      const response = await authFetch('http://localhost:8080/messages/read', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,8 +76,10 @@ const Messages = () => {
   };
 
   const fetchMessages = useCallback(async () => {
+    if (!userId) return [];
+    
     try {
-      const response = await fetch(`http://localhost:8080/messages?userId=${userId}`, {
+      const response = await authFetch(`http://localhost:8080/messages?userId=${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +141,7 @@ const Messages = () => {
       setError('Failed to load messages: ' + err.message);
       return [];
     }
-  }, [userId, selectedUser]);
+  }, [userId, selectedUser, authFetch]);
 
   useEffect(() => {
     if (userId) {
@@ -153,7 +156,7 @@ const Messages = () => {
         const profiles = {};
         for (const id of uniqueUserIds) {
           try {
-            const profile = await fetch(`http://localhost:8080/user/profile?userId=${id}`, {
+            const profile = await authFetch(`http://localhost:8080/user/profile?userId=${id}`, {
               headers: {
                 'Content-Type': 'application/json',
               }
@@ -176,8 +179,11 @@ const Messages = () => {
           clearInterval(pollingInterval.current);
         }
       };
+    } else {
+      setLoading(false);
+      setError('No user information available');
     }
-  }, [userId, fetchMessages, location.state]);
+  }, [userId, fetchMessages, location.state, authFetch]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -187,10 +193,10 @@ const Messages = () => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedUser) return;
+    if (!newMessage.trim() || !selectedUser || !userId) return;
 
     try {
-      const response = await fetch('http://localhost:8080/messages', {
+      const response = await authFetch('http://localhost:8080/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -22,16 +22,26 @@ export const RegisterForm = () => {
       return;
     }
 
-    const result = await register(
-      formData.username,
-      formData.email,
-      formData.password
-    );
-
-    if (result.success) {
-      navigate("/login");
-    } else {
-      setError(result.error);
+    try {
+      const result = await register(
+        formData.username,
+        formData.email,
+        formData.password
+      );
+      
+      console.log("Registration result:", result);
+      
+      if (result && (result.success || result.userId)) {
+        // Add a success message to console to debug
+        console.log("Registration successful, navigating to login page");
+        // Use replace: true to ensure proper navigation
+        navigate("/login", { replace: true });
+      } else {
+        setError(result?.error || "Registration failed");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError("An unexpected error occurred during registration");
     }
   };
 

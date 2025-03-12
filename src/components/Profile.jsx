@@ -5,7 +5,7 @@ import { Users, Mail, Plus, Clock, ChevronDown, ChevronUp, MessageCircle } from 
 import ProfileButton from "./ProfileButton";
 
 const Profile = () => {
-  const { userId, getUserProfile } = useAuth();
+  const { currentUser, getUserProfile, token } = useAuth();
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [allSubreddits, setAllSubreddits] = useState([]);
@@ -15,16 +15,46 @@ const Profile = () => {
   const [showAllSubreddits, setShowAllSubreddits] = useState(false);
   const [showAllUsers, setShowAllUsers] = useState(false);
 
+  // Create an authFetch function since it's not provided by the context
+  const authFetch = async (url, options = {}) => {
+    const headers = {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`
+    };
+    
+    return fetch(url, {
+      ...options,
+      headers
+    });
+  };
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
+        console.log("Fetching profile data for user:", currentUser);
+        
         // Fetch profile data
-        const data = await getUserProfile();
-        setProfileData(data);
+        const profileResponse = await authFetch(
+          `http://localhost:8080/user/profile?userId=${currentUser.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        
+        if (!profileResponse.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+        
+        const profileData = await profileResponse.json();
+        console.log("Profile data received:", profileData);
+        setProfileData(profileData);
 
         // Fetch all subreddits
-        const subredditsResponse = await fetch(
+        const subredditsResponse = await authFetch(
           "http://localhost:8080/subreddit",
           {
             method: "GET",
@@ -39,7 +69,7 @@ const Profile = () => {
         setAllSubreddits(subredditsData);
 
         // Fetch all users
-        const usersResponse = await fetch("http://localhost:8080/users", {
+        const usersResponse = await authFetch("http://localhost:8080/users", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -47,7 +77,7 @@ const Profile = () => {
         });
         if (!usersResponse.ok) throw new Error("Failed to fetch users");
         const usersData = await usersResponse.json();
-        setAllUsers(usersData.filter((user) => user.id !== userId));
+        setAllUsers(usersData.filter((user) => user.id !== currentUser.id));
       } catch (err) {
         setError("Failed to load data");
         console.error("Data fetch error:", err);
@@ -56,10 +86,14 @@ const Profile = () => {
       }
     };
 
-    if (userId) {
+    if (currentUser && currentUser.id) {
       fetchAllData();
+    } else {
+      console.error("No current user found");
+      setError("No user information available");
+      setLoading(false);
     }
-  }, [userId, getUserProfile]);
+  }, [currentUser, token]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not available";
@@ -264,28 +298,6 @@ const Profile = () => {
           </div>
         )}
       </div>
-
-      {/* Recent Activity Section
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">recent activity</h2>
-        {profileData?.recentPosts?.length > 0 ? (
-          <div className="space-y-4">
-            {profileData.recentPosts.map(post => (
-              <div key={post.id} className="border-b pb-4">
-                <Link to={`/posts/${post.id}`} className="block hover:bg-gray-50">
-                  <h3 className="font-medium">{post.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{post.content}</p>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Posted to r/{post.subredditName} • {post.karma} karma
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500">no recent activity!</p>
-        )}
-      </div> */}
     </div>
   );
 };

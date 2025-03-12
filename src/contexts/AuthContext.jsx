@@ -1,174 +1,193 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useContext, createContext, useState, useEffect } from 'react';
+import config from '../config';
 
-const AuthContext = createContext(null);
+// Create the Auth Context
+export const AuthContext = createContext();
 
+// Auth Provider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
-  const [userId, setUserId] = useState(() => localStorage.getItem('userId'));
-
-  const login = useCallback(async (email, password) => {
-    try {
-      const response = await fetch('http://localhost:8080/user/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      if (data.success && data.token) {
-        // Save token and userId
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.userId);
-        setToken(data.token);
-        setUserId(data.userId);
-
-        
-        // const userResponse = await fetch(`http://localhost:8080/user/profile?userId=${data.userId}`, {
-        //   headers: {
-        //     'Authorization': `Bearer ${data.token}`
-        //   }
-        // });
-        // Fetch user profile with the just userID and its a get method
-        const userResponse = await fetch(`http://localhost:8080/user/profile?userId=${data.userId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });        if (!userResponse.ok) {
-          throw new Error('failed to fetch user profile');
-        }
-        
-        const userData = await userResponse.json();
-        
-        // Combine user data with userId for completeness
-        const completeUserData = {
-          ...userData,
-          id: data.userId
-        };
-        
-        setUser(completeUserData);
-        localStorage.setItem('user', JSON.stringify(completeUserData));
-        
-        return { success: true };
-      }
-
-      return { success: false, error: 'Invalid credentials' };
-    } catch (error) {
-      return { success: false, error: error.message };
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedUser && storedToken) {
+      setCurrentUser(JSON.parse(storedUser));
+      setToken(storedToken);
     }
+    
+    setLoading(false);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUserId(null);
-    setUser(null);
-  }, []);
-
-  const register = useCallback(async (username, email, password) => {
+  // Register a new user
+  const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:8080/user/register', {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${config.apiUrl}/user/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          karma: 0,
+        }),
       });
-
+      
       const data = await response.json();
-
+      
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
       }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error.message };
+      
+      // The API already includes a success flag, so we pass it through
+      return data;
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Add a utility function for getting user feed
-  const getUserFeed = useCallback(async () => {
-    if (!token || !userId) {
-      throw new Error('Not authenticated');
-    }
-
+  // Login user
+  const login = async (email, password) => {
     try {
-      const response = await fetch(`http://localhost:8080/user/feed?userId=${userId}`, {
-        method: 'GET',
+      setLoading(true);
+      setError(null);
+      
+      console.log(`Attempting login for ${email}`);
+      
+      const response = await fetch(`${config.apiUrl}/user/login`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
-
+      
+      const data = await response.json();
+      console.log("Login response:", data);
+      
       if (!response.ok) {
-        throw new Error('failed to fetch user feed');
+        throw new Error(data.error || 'Login failed');
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user feed:', error);
-      throw error;
+      
+      // Save user data and token
+      const userData = {
+        id: data.userId,
+        token: data.token,
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.token);
+      
+      setCurrentUser(userData);
+      setToken(data.token);
+      
+      // Return the original response which already includes success: true
+      return data;
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
     }
-  }, [token, userId]);
+  };
 
-  // Add a utility function for getting user profile
-  const getUserProfile = useCallback(async (profileId = userId) => {
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
+  // Logout user
+  const logout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setCurrentUser(null);
+    setToken(null);
+  };
 
+  // Get user profile
+  const getUserProfile = async (userId) => {
     try {
-      const response = await fetch(`http://localhost:8080/user/profile?userId=${profileId}`, {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${config.apiUrl}/user/profile?userId=${userId || currentUser?.id}`, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Authorization': `Bearer ${token}`,
+        },
       });
-
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('failed to fetch user profile');
+        throw new Error(data.error || 'Failed to fetch profile');
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      throw error;
+      
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  }, [token, userId]);
+  };
+
+  // Auth fetch - Helper method for authenticated API requests
+  const authFetch = async (url, options = {}) => {
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const headers = {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`
+    };
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers
+      });
+      
+      return response;
+    } catch (err) {
+      console.error('Auth fetch error:', err);
+      throw err;
+    }
+  };
+
+  // Context value
+  const value = {
+    currentUser,
+    loading,
+    error,
+    token,
+    register,
+    login,
+    logout,
+    getUserProfile,
+    authFetch
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      userId,
-      login, 
-      logout, 
-      register,
-      getUserFeed,
-      getUserProfile
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// Custom hook to use the AuthContext
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 };

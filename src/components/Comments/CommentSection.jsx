@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import Comment from "./Comment";
 
 const CommentSection = ({ postId }) => {
-  const { userId } = useAuth();
+  const { userId, authFetch } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ const CommentSection = ({ postId }) => {
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await authFetch(
         `http://localhost:8080/comment/post?postId=${postId}`
       );
       if (!response.ok) throw new Error("failed to fetch comments");
@@ -48,7 +48,7 @@ const CommentSection = ({ postId }) => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/comment`, {
+      const response = await authFetch(`http://localhost:8080/comment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ const CommentSection = ({ postId }) => {
 
   const handleReply = async (parentCommentId, content) => {
     try {
-      const response = await fetch(`http://localhost:8080/comment`, {
+      const response = await authFetch(`http://localhost:8080/comment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

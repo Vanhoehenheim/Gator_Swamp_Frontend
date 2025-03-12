@@ -16,11 +16,21 @@ export const LoginForm = () => {
     e.preventDefault();
     setError("");
 
-    const result = await login(email, password);
-    if (result.success) {
-      navigate("/feed");
-    } else {
-      setError(result.error);
+    try {
+      const result = await login(email, password);
+      console.log("Login result:", result);
+      
+      // Check for success in multiple ways since API response may vary
+      if (result && (result.success || result.token || result.userId)) {
+        console.log("Login successful, navigating to profile page");
+        // Navigate to profile page after successful login
+        navigate("/profile", { replace: true });
+      } else {
+        setError(result?.error || "Login failed");
+      }
+    } catch (err) {
+      console.error("Login form error:", err);
+      setError("An unexpected error occurred");
     }
   };
 
@@ -80,7 +90,6 @@ export const LoginForm = () => {
           enter!
         </button>
         </div>
-
 
         <div className="mt-8 text-center border-t-2 border-black pt-4">
           <span className="text-black">not yet subscribed? </span>

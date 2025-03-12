@@ -9,7 +9,7 @@ import ProfileButton from "../ProfileButton";
 const SubredditView = () => {
   const navigate = useNavigate();
   const { subredditId } = useParams();
-  const { userId, user, getUserProfile } = useAuth();
+  const { userId, user, getUserProfile, authFetch } = useAuth();
   const [subreddit, setSubreddit] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ const SubredditView = () => {
       try {
         setLoading(true);
         // Fetch subreddit details
-        const subredditResponse = await fetch(
+        const subredditResponse = await authFetch(
           `http://localhost:8080/subreddit?id=${subredditId}`
         );
         if (!subredditResponse.ok) throw new Error("Failed to load subreddit");
@@ -55,7 +55,7 @@ const SubredditView = () => {
         setSubreddit(subredditData);
 
         // Fetch subreddit posts
-        const postsResponse = await fetch(
+        const postsResponse = await authFetch(
           `http://localhost:8080/post?subredditId=${subredditId}`
         );
         if (!postsResponse.ok) throw new Error("Failed to load posts");
@@ -71,13 +71,13 @@ const SubredditView = () => {
     if (subredditId) {
       fetchSubredditData();
     }
-  }, [subredditId]);
+  }, [subredditId, authFetch]);
 
   const handleJoinSubreddit = async () => {
     setJoinError("");
     try {
       setIsJoining(true);
-      const response = await fetch("http://localhost:8080/subreddit/members", {
+      const response = await authFetch("http://localhost:8080/subreddit/members", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

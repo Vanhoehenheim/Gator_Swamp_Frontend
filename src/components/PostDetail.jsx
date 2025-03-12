@@ -7,7 +7,7 @@ import CommentSection from './Comments/CommentSection';
 
 const PostDetail = () => {
   const { postId } = useParams();
-  const { userId, token } = useAuth();
+  const { userId, authFetch } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -20,13 +20,13 @@ const PostDetail = () => {
       try {
         // Fetch post details
         console.log(postId);
-        const postResponse = await fetch(`http://localhost:8080/post?id=${postId}`);
+        const postResponse = await authFetch(`http://localhost:8080/post?id=${postId}`);
         if (!postResponse.ok) throw new Error('Failed to load post');
         const postData = await postResponse.json();
         setPost(postData);
 
         // Fetch comments
-        const commentsResponse = await fetch(`http://localhost:8080/comment/post?postId=${postId}`);
+        const commentsResponse = await authFetch(`http://localhost:8080/comment/post?postId=${postId}`);
         if (!commentsResponse.ok) throw new Error('Failed to load comments');
         const commentsData = await commentsResponse.json();
         setComments(commentsData);
@@ -38,11 +38,11 @@ const PostDetail = () => {
     };
 
     fetchPostDetails();
-  }, [postId]);
+  }, [postId, authFetch]);
 
   const handleVote = async (isUpvote) => {
     try {
-      const response = await fetch(`http://localhost:8080/post/vote`, {
+      const response = await authFetch(`http://localhost:8080/post/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ const PostDetail = () => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/posts/${postId}/comments`, {
+      const response = await authFetch(`http://localhost:8080/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

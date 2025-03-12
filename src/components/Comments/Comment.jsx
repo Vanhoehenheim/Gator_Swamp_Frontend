@@ -15,7 +15,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import VoteConfetti from "../animations/VoteConfetti";
 
 const Comment = ({ comment, onReply, postId, level = 0 }) => {
-  const { userId } = useAuth();
+  const { userId, authFetch } = useAuth();
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [replyContent, setReplyContent] = useState("");
@@ -35,7 +35,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
         try {
           const childrenData = await Promise.all(
             comment.children.map(async (childId) => {
-              const response = await fetch(
+              const response = await authFetch(
                 `http://localhost:8080/comment?commentId=${childId}`
               );
               if (!response.ok)
@@ -53,7 +53,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     };
 
     fetchChildComments();
-  }, [comment.children]);
+  }, [comment.children, authFetch]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -70,7 +70,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/comment/vote`, {
+      const response = await authFetch(`http://localhost:8080/comment/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,7 +174,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/comment`, {
+      const response = await authFetch(`http://localhost:8080/comment`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
