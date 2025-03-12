@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const CreatePost = () => {
-  const { userId, authFetch } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const { subredditId } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -25,17 +25,17 @@ const CreatePost = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          Title: formData.title.trim(),
-          Content: formData.content.trim(),
-          AuthorID: userId,
-          SubredditID: subredditId
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          authorId: currentUser.id,
+          subredditId: subredditId
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.Message || 'Failed to create post');
+        throw new Error(data.error || 'Failed to create post');
       }
 
       // Navigate back to the subreddit page
@@ -109,7 +109,7 @@ const CreatePost = () => {
             disabled={isLoading}
             className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'creating...' : 'create Post'}
+            {isLoading ? 'creating...' : 'create post'}
           </button>
         </div>
       </form>

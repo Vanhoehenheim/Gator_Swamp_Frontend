@@ -1,5 +1,5 @@
 import { useContext, createContext, useState, useEffect } from 'react';
-import config from '../config';
+import { authService } from '../services/authService';
 
 // Create the Auth Context
 export const AuthContext = createContext();
@@ -10,8 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [profileCache, setProfileCache] = useState({});
   
-  // Check if user is already logged in on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
@@ -24,33 +24,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Register a new user
   const register = async (username, email, password) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${config.apiUrl}/user/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-          karma: 0,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-      
-      // The API already includes a success flag, so we pass it through
-      return data;
+      const result = await authService.register(username, email, password);
+      return result;
     } catch (err) {
       setError(err.message);
       return { success: false, error: err.message };
@@ -59,46 +39,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login user
   const login = async (email, password) => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log(`Attempting login for ${email}`);
+      const result = await authService.login(email, password);
       
-      const response = await fetch(`${config.apiUrl}/user/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-      
-      const data = await response.json();
-      console.log("Login response:", data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-      
-      // Save user data and token
       const userData = {
-        id: data.userId,
-        token: data.token,
+        id: result.userId,
+        token: result.token,
       };
       
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', result.token);
       
       setCurrentUser(userData);
-      setToken(data.token);
+      setToken(result.token);
       
-      // Return the original response which already includes success: true
-      return data;
+      return result;
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message);
@@ -108,31 +67,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout user
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setCurrentUser(null);
     setToken(null);
+    setProfileCache({});
   };
 
-  // Get user profile
   const getUserProfile = async (userId) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${config.apiUrl}/user/profile?userId=${userId || currentUser?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const targetUserId = userId || currentUser?.id;
+      const cacheKey = `profile-${targetUserId}`;
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch profile');
+      if (profileCache[cacheKey]) {
+        const now = Date.now();
+        const cacheAge = now - profileCache[cacheKey].timestamp;
+        if (cacheAge < 60000) {
+          return profileCache[cacheKey].data;
+        }
       }
+      
+      const data = await authService.getUserProfile(targetUserId, token);
+      
+      setProfileCache(prev => ({
+        ...prev,
+        [cacheKey]: {
+          data,
+          timestamp: Date.now()
+        }
+      }));
       
       return data;
     } catch (err) {
@@ -143,7 +110,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Auth fetch - Helper method for authenticated API requests
   const authFetch = async (url, options = {}) => {
     if (!token) {
       throw new Error('No authentication token available');
@@ -167,7 +133,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Context value
   const value = {
     currentUser,
     loading,
@@ -187,7 +152,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the AuthContext
 export const useAuth = () => {
   return useContext(AuthContext);
 };

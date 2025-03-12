@@ -1,15 +1,12 @@
-// API configuration for different environments
 const config = {
-  // Development API URL (local)
-  development: {
-    apiUrl: 'http://localhost:8080',
-  },
-  // Production API URL
-  production: {
-    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080', // Fallback to local during build
-  },
+    apiUrl: process.env.NODE_ENV === 'production'
+        ? 'https://gator-swamp-frontend.vercel.app'
+        : 'http://localhost:8080',
+    getBaseUrl: () => {
+        return process.env.NODE_ENV === 'production'
+            ? 'https://gator-swamp-frontend.vercel.app'
+            : 'http://localhost:8080';
+    }
 };
 
-// Use the appropriate configuration based on the environment
-const env = import.meta.env.MODE || 'development';
-export default config[env];
+export default config;

@@ -192,15 +192,15 @@ const Profile = () => {
           your subreddit memberships
         </h2>
         <div className="flex flex-wrap gap-2">
-          {profileData?.subredditName &&
-          profileData.subredditName.length > 0 ? (
-            profileData.subredditName.map((name, index) => (
+          {profileData?.subredditID &&
+          profileData.subredditID.length > 0 ? (
+            profileData.subredditID.map((id, index) => (
               <Link
-                key={profileData.subredditID[index]}
-                to={`/r/${profileData.subredditID[index]}`}
+                key={id}
+                to={`/r/${id}`}
                 className="bg-gray-100 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
               >
-                r/{name}
+                r/{profileData.subredditName[index]}
               </Link>
             ))
           ) : (
@@ -212,7 +212,7 @@ const Profile = () => {
       {/* Browse All Subreddits Section */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold">browse all subreddits</h2>
             <button
               onClick={() => navigate('/create-subreddit')}
@@ -226,11 +226,7 @@ const Profile = () => {
             onClick={() => setShowAllSubreddits(!showAllSubreddits)}
             className="text-gray-500 hover:text-gray-700"
           >
-            {showAllSubreddits ? (
-              <ChevronUp size={20} />
-            ) : (
-              <ChevronDown size={20} />
-            )}
+            {showAllSubreddits ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
         </div>
 
@@ -238,20 +234,19 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {allSubreddits.map((subreddit) => (
               <Link
-                key={subreddit.ID || subreddit.id}
-                to={`/r/${subreddit.ID || subreddit.id}`}
+                key={subreddit.ID}
+                to={`/r/${subreddit.ID}`}
                 className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <h3 className="font-medium text-lg">
-                  {subreddit.Name || subreddit.name}
+                  {subreddit.Name}
                 </h3>
                 <p className="text-sm text-gray-600 line-clamp-2">
-                  {subreddit.Description || subreddit.description}
+                  {subreddit.Description}
                 </p>
                 <div className="mt-2 text-xs text-gray-500">
-                  {subreddit.Members || subreddit.members || 0} members •
-                  Created{" "}
-                  {formatDate(subreddit.CreatedAt || subreddit.createdAt)}
+                  {subreddit.Members || 0} members •
+                  Created {formatDate(subreddit.CreatedAt)}
                 </div>
               </Link>
             ))}

@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const CreateSubreddit = () => {
-  const { userId, authFetch } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -24,9 +24,9 @@ const CreateSubreddit = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          Name: formData.name.trim(),
-          Description: formData.description.trim(),
-          CreatorID: userId
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          creatorId: currentUser.id
         }),
       });
 

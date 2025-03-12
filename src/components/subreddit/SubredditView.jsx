@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { subredditService } from "../../services/subredditService";
 import Post from "../Post";
 import { Users, PenSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import ProfileButton from "../ProfileButton";
 
 const SubredditView = () => {
   const navigate = useNavigate();
   const { subredditId } = useParams();
-  const { userId, user, getUserProfile, authFetch } = useAuth();
+  const { currentUser, token, authFetch } = useAuth();
   const [subreddit, setSubreddit] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,98 +18,60 @@ const SubredditView = () => {
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
 
-  // Check initial membership status from user data
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserProfile();
-        if (userData && userData.subredditID) {
-          setIsMember(userData.subredditID.includes(subredditId));
-        }
-      } catch (err) {
-        console.error("Error fetching user profile:", err);
+    const fetchData = async () => {
+      if (!subredditId || !currentUser?.id || !token) {
+        setError("Please login to view this subreddit");
+        setLoading(false);
+        return;
       }
-    };
 
-    fetchUserData();
-  }, [subredditId, getUserProfile]);
-
-  // Check membership status from context user data as backup
-  useEffect(() => {
-    if (user && user.subredditID) {
-      setIsMember(user.subredditID.includes(subredditId));
-    }
-  }, [user, subredditId]);
-
-  // Fetch subreddit data and posts
-  useEffect(() => {
-    const fetchSubredditData = async () => {
       try {
         setLoading(true);
-        // Fetch subreddit details
-        const subredditResponse = await authFetch(
-          `http://localhost:8080/subreddit?id=${subredditId}`
+        setError(null);
+
+        const subredditData = await subredditService.getSubreddit(
+          subredditId, authFetch
         );
-        if (!subredditResponse.ok) throw new Error("Failed to load subreddit");
-        const subredditData = await subredditResponse.json();
         setSubreddit(subredditData);
 
-        // Fetch subreddit posts
-        const postsResponse = await authFetch(
-          `http://localhost:8080/post?subredditId=${subredditId}`
-        );
-        if (!postsResponse.ok) throw new Error("Failed to load posts");
-        const postsData = await postsResponse.json();
+        // Check membership status
+        const membershipData = await subredditService.getMembers(subredditId, authFetch);
+        setIsMember(membershipData.includes(currentUser.id));
+
+        // Fetch posts
+        const postsData = await subredditService.getPosts(subredditId, authFetch);
         setPosts(postsData);
       } catch (err) {
-        setError(err.message);
+        console.error("Error loading subreddit:", err);
+        setError(err.message || "Failed to load subreddit");
       } finally {
         setLoading(false);
       }
     };
 
-    if (subredditId) {
-      fetchSubredditData();
-    }
-  }, [subredditId, authFetch]);
+    fetchData();
+  }, [subredditId, currentUser, token, authFetch]);
 
-  const handleJoinSubreddit = async () => {
+  const handleJoinSubreddit = useMemo(() => async () => {
+    if (!subredditId || !currentUser?.id) return;
+
     setJoinError("");
     try {
       setIsJoining(true);
-      const response = await authFetch("http://localhost:8080/subreddit/members", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subredditId: subredditId,
-          userId: userId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.Code === "DUPLICATE") {
-          setJoinError("You are already a member of this subreddit");
-        } else {
-          setJoinError(data.Message || "Failed to join subreddit");
-        }
-        return;
-      }
-
-      // Fetch fresh user data to update membership status
-      const userData = await getUserProfile();
-      if (userData && userData.subredditID) {
-        setIsMember(userData.subredditID.includes(subredditId));
-      }
+      await subredditService.joinSubreddit(subredditId, currentUser.id, authFetch);
+      setIsMember(true);
     } catch (err) {
-      setJoinError("An error occurred while joining the subreddit");
+      console.error("Error joining subreddit:", err);
+      if (err.code === "DUPLICATE") {
+        setJoinError("You are already a member of this subreddit");
+      } else {
+        setJoinError(err.message || "An error occurred while joining the subreddit");
+      }
     } finally {
       setIsJoining(false);
     }
-  };
+  }, [subredditId, currentUser, authFetch]);
 
   if (loading) {
     return (
