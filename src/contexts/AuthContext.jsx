@@ -1,27 +1,60 @@
 import { useContext, createContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import config from '../config';
 
-// Create the Auth Context
 export const AuthContext = createContext();
 
-// Auth Provider component
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    // Initialize state from localStorage
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [profileCache, setProfileCache] = useState({});
   
+  // Effect to sync authentication state with localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedUser && storedToken) {
-      setCurrentUser(JSON.parse(storedUser));
-      setToken(storedToken);
+    if (currentUser && token) {
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      localStorage.setItem('token', token);
     }
-    
-    setLoading(false);
+  }, [currentUser, token]);
+
+  // Initial auth check
+  useEffect(() => {
+    const validateAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      
+      if (storedUser && storedToken) {
+        try {
+          // Verify token is still valid by making a test request
+          const user = JSON.parse(storedUser);
+          const response = await fetch(`${config.apiUrl}/user/profile?userId=${user.id}`, {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          
+          if (!response.ok) {
+            // Token is invalid, clear authentication
+            logout();
+          } else {
+            setCurrentUser(user);
+            setToken(storedToken);
+          }
+        } catch (err) {
+          console.error('Auth validation error:', err);
+          logout();
+        }
+      }
+      setLoading(false);
+    };
+
+    validateAuth();
   }, []);
 
   const register = async (username, email, password) => {
