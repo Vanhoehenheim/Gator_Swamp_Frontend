@@ -4,9 +4,9 @@ const config = {
   development: {
     apiUrl: 'http://localhost:8080',
   },
-  // Production API URL - update this when you have a production backend
+  // Production API URL
   production: {
-    apiUrl: import.meta.env.VITE_API_URL || 'https://your-backend-url.com',
+    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080', // Fallback to local during build
   },
 };
 
