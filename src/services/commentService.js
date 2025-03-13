@@ -64,5 +64,32 @@ export const commentService = {
             throw new Error('Failed to vote on comment');
         }
         return response.json();
+    },
+
+    getChildComments: async (commentId, authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/comment?commentId=${commentId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch child comment');
+        }
+        return response.json();
+    },
+
+    markCommentsAsRead: async (partnerId, userId, messageIds, authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/messages/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fromId: partnerId,
+                toId: userId,
+                messageIds
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to mark messages as read');
+        }
+        return response.json();
     }
 };

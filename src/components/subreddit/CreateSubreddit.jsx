@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { subredditService } from '../../services/subredditService';
 
 const CreateSubreddit = () => {
   const { currentUser, authFetch } = useAuth();
@@ -18,23 +19,11 @@ const CreateSubreddit = () => {
     setIsLoading(true);
 
     try {
-      const response = await authFetch('http://localhost:8080/subreddit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          creatorId: currentUser.id
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create subreddit');
-      }
+      const data = await subredditService.createSubreddit({
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        creatorId: currentUser.id
+      }, authFetch);
 
       // Navigate to the newly created subreddit
       navigate(`/r/${data.ID}`);

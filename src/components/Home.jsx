@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Post from './Post';
-import GatorRelax from '../assets/gatorRelax.svg';
+import GatorRelax from '../assets/GatorRelax.svg';
 import ProfileButton from './ProfileButton';
+import { feedService } from '../services/feedService';
 
 const Home = () => {
   const { currentUser, authFetch } = useAuth();
@@ -10,48 +11,16 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Create getUserFeed function locally since it's not provided by the context
-  const getUserFeed = async () => {
-    try {
-      const response = await authFetch(`http://localhost:8080/user/feed?userId=${currentUser.id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user feed');
-      }
-      
-      return await response.json();
-    } catch (err) {
-      console.error('Error fetching user feed:', err);
-      return [];
-    }
-  };
-
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
         console.log("Fetching posts for user:", currentUser);
         
-        const feedData = await getUserFeed();
+        const feedData = await feedService.getUserFeed(currentUser.id, authFetch);
         
         if (!feedData || feedData.length === 0) {
-          const recentResponse = await authFetch('http://localhost:8080/posts/recent', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-          
-          if (!recentResponse.ok) {
-            throw new Error('Failed to load recent posts');
-          }
-          
-          const recentPosts = await recentResponse.json();
+          const recentPosts = await feedService.getRecentPosts(authFetch);
           if (!recentPosts || recentPosts.length === 0) {
             setError('No posts available');
             setPosts([]);

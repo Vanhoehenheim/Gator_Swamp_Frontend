@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import Comment from "./Comment";
+import { commentService } from "../../services/commentService";
 
 const CommentSection = ({ postId }) => {
   const { userId, authFetch } = useAuth();
@@ -16,12 +17,7 @@ const CommentSection = ({ postId }) => {
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const response = await authFetch(
-        `http://localhost:8080/comment/post?postId=${postId}`
-      );
-      if (!response.ok) throw new Error("failed to fetch comments");
-  
-      const data = await response.json();
+      const data = await commentService.getPostComments(postId, authFetch);
       
       // If response is null or undefined, set comments to empty array
       if (!data) {
@@ -30,9 +26,7 @@ const CommentSection = ({ postId }) => {
       }
   
       // If we have comments, then filter for top-level ones
-      const topLevelComments = data.filter(
-        (comment) => !("parentId" in comment)
-      );
+      const topLevelComments = data.filter(comment => !("parentId" in comment));
       setComments(topLevelComments);
   
     } catch (err) {
@@ -48,19 +42,11 @@ const CommentSection = ({ postId }) => {
     if (!newComment.trim()) return;
 
     try {
-      const response = await authFetch(`http://localhost:8080/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Content: newComment.trim(),
-          PostID: postId,
-          AuthorID: userId,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to post comment");
+      await commentService.createComment({
+        Content: newComment.trim(),
+        PostID: postId,
+        AuthorID: userId,
+      }, authFetch);
 
       await fetchComments(); // Refresh all comments
       setNewComment("");
@@ -72,20 +58,12 @@ const CommentSection = ({ postId }) => {
 
   const handleReply = async (parentCommentId, content) => {
     try {
-      const response = await authFetch(`http://localhost:8080/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Content: content.trim(),
-          PostID: postId,
-          AuthorID: userId,
-          ParentID: parentCommentId,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to post reply");
+      await commentService.createComment({
+        Content: content.trim(),
+        PostID: postId,
+        AuthorID: userId,
+        ParentID: parentCommentId,
+      }, authFetch);
 
       await fetchComments(); // Refresh all comments
     } catch (err) {
@@ -133,6 +111,7 @@ const CommentSection = ({ postId }) => {
             postId={postId}
           />
         ))}
+
         {comments.length === 0 && (
           <div className="text-center py-4 text-gray-600">
             no comments yet. be the first to comment!

@@ -1,20 +1,10 @@
 import config from '../config';
 
 export const messageService = {
-    getUserMessages: async (userId, authFetch) => {
+    getMessages: async (userId, authFetch) => {
         const response = await authFetch(`${config.apiUrl}/messages?userId=${userId}`);
         if (!response.ok) {
-            throw new Error('Failed to fetch messages');
-        }
-        return response.json();
-    },
-
-    getConversation: async (userId, otherUserId, authFetch) => {
-        const response = await authFetch(
-            `${config.apiUrl}/messages/conversation?userId=${userId}&otherUserId=${otherUserId}`
-        );
-        if (!response.ok) {
-            throw new Error('Failed to fetch conversation');
+            throw new Error(`Failed to fetch messages: ${response.status}`);
         }
         return response.json();
     },
@@ -25,24 +15,38 @@ export const messageService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(messageData),
+            body: JSON.stringify(messageData)
         });
+
         if (!response.ok) {
             throw new Error('Failed to send message');
         }
         return response.json();
     },
 
-    markMessagesAsRead: async (messageData, authFetch) => {
+    markAsRead: async (partnerId, userId, messageIds, authFetch) => {
         const response = await authFetch(`${config.apiUrl}/messages/read`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(messageData),
+            body: JSON.stringify({
+                fromId: partnerId,
+                toId: userId,
+                messageIds
+            })
         });
+
         if (!response.ok) {
             throw new Error('Failed to mark messages as read');
+        }
+        return response.json();
+    },
+    
+    getUserProfile: async (userId, authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/user/profile?userId=${userId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch user profile: ${response.status}`);
         }
         return response.json();
     }

@@ -1,7 +1,7 @@
 import config from '../config';
 
 export const profileService = {
-    getUserProfile: async (userId, authFetch) => {
+    getProfile: async (userId, authFetch) => {
         const response = await authFetch(`${config.apiUrl}/user/profile?userId=${userId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch profile data');
@@ -9,18 +9,28 @@ export const profileService = {
         return response.json();
     },
 
-    getAllUsers: async (authFetch) => {
-        const response = await authFetch(`${config.apiUrl}/users`);
+    getAllSubreddits: async (authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/subreddit`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
         if (!response.ok) {
-            throw new Error('Failed to fetch users');
+            throw new Error('Failed to fetch subreddits');
         }
         return response.json();
     },
 
-    getUserFeed: async (userId, limit = 10, authFetch) => {
-        const response = await authFetch(`${config.apiUrl}/user/feed?userId=${userId}&limit=${limit}`);
+    getAllUsers: async (authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/users`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
         if (!response.ok) {
-            throw new Error('Failed to fetch user feed');
+            throw new Error('Failed to fetch users');
         }
         return response.json();
     }

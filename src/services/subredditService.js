@@ -37,13 +37,29 @@ export const subredditService = {
                 userId,
             }),
         });
-        
+
         const data = await response.json();
         if (!response.ok) {
             throw {
                 code: data.Code,
                 message: data.Message || "Failed to join subreddit"
             };
+        }
+        return data;
+    },
+
+    createSubreddit: async (subredditData, authFetch) => {
+        const response = await authFetch(`${config.apiUrl}/subreddit`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(subredditData)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to create subreddit');
         }
         return data;
     }

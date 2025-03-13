@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { MessageCircle, Send, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import ProfileButton from './ProfileButton';
+import { messageService } from '../services/messageService';
 
 const Messages = () => {
   const location = useLocation();
@@ -18,7 +19,6 @@ const Messages = () => {
   const pollingInterval = useRef(null);
   const userId = currentUser?.id;
 
-  // Set initial selected user from navigation state
   useEffect(() => {
     if (location.state?.initialSelectedUser) {
       setSelectedUser(location.state.initialSelectedUser);
@@ -45,23 +45,12 @@ const Messages = () => {
 
       if (unreadMessages.length === 0) return;
 
-      const response = await authFetch('http://localhost:8080/messages/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fromId: partnerId,
-          toId: userId,
-          messageIds: unreadMessages.map(msg => msg.id)
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Server response:', errorData);
-        throw new Error('Failed to mark messages as read');
-      }
+      await messageService.markAsRead(
+        partnerId,
+        userId,
+        unreadMessages.map(msg => msg.id),
+        authFetch
+      );
 
       setMessages(prevMessages =>
         prevMessages.map(msg =>
@@ -79,57 +68,29 @@ const Messages = () => {
     if (!userId) return [];
     
     try {
-      const response = await authFetch(`http://localhost:8080/messages?userId=${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
+      const allMessages = await messageService.getMessages(userId, authFetch);
+      const conversationsMap = new Map();
+
+      allMessages.forEach(msg => {
+        const partnerId = msg.fromId === userId ? msg.toId : msg.fromId;
+        if (!conversationsMap.has(partnerId)) {
+          conversationsMap.set(partnerId, []);
         }
+        conversationsMap.get(partnerId).push(msg);
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch messages: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      const allMessages = Array.isArray(responseData) ? responseData : [];
-
-      const normalizedMessages = allMessages.map(msg => ({
-        id: msg.ID || msg.id,
-        fromId: msg.FromID || msg.fromId,
-        toId: msg.ToID || msg.toId,
-        content: msg.Content || msg.content,
-        createdAt: msg.CreatedAt || msg.createdAt,
-        isRead: msg.IsRead || msg.isRead
-      }));
-
-      setMessages(normalizedMessages);
-
-      const conversationsMap = normalizedMessages.reduce((acc, message) => {
-        const partnerId = message.fromId === userId ? message.toId : message.fromId;
-        if (!acc[partnerId]) {
-          acc[partnerId] = [];
-        }
-        acc[partnerId].push(message);
-        return acc;
-      }, {});
-
-      Object.keys(conversationsMap).forEach(partnerId => {
-        conversationsMap[partnerId].sort((a, b) => 
-          new Date(a.createdAt) - new Date(b.createdAt)
-        );
-      });
-
-      const conversationsArray = Object.entries(conversationsMap)
+      const conversationsArray = Array.from(conversationsMap.entries())
         .map(([partnerId, messages]) => ({
           partnerId,
           messages,
           latestMessage: messages[messages.length - 1]
         }))
-        .sort((a, b) => 
+        .sort((a, b) =>
           new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt)
         );
 
       setConversations(conversationsArray);
+      setMessages(allMessages);
 
       if (selectedUser) {
         markMessagesAsRead(selectedUser);
@@ -148,7 +109,6 @@ const Messages = () => {
       fetchMessages().then(async (conversations) => {
         const uniqueUserIds = [...new Set(conversations.map(c => c.partnerId))];
         
-        // Add initialSelectedUser to the list of profiles to fetch if it exists
         if (location.state?.initialSelectedUser) {
           uniqueUserIds.push(location.state.initialSelectedUser);
         }
@@ -156,14 +116,8 @@ const Messages = () => {
         const profiles = {};
         for (const id of uniqueUserIds) {
           try {
-            const profile = await authFetch(`http://localhost:8080/user/profile?userId=${id}`, {
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            });
-            if (profile.ok) {
-              profiles[id] = await profile.json();
-            }
+            const profile = await messageService.getUserProfile(id, authFetch);
+            profiles[id] = profile;
           } catch (err) {
             console.error(`Failed to fetch profile for user ${id}:`, err);
           }
@@ -196,21 +150,11 @@ const Messages = () => {
     if (!newMessage.trim() || !selectedUser || !userId) return;
 
     try {
-      const response = await authFetch('http://localhost:8080/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fromId: userId,
-          toId: selectedUser,
-          content: newMessage
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
+      await messageService.sendMessage({
+        fromId: userId,
+        toId: selectedUser,
+        content: newMessage
+      }, authFetch);
 
       setNewMessage('');
       await fetchMessages();

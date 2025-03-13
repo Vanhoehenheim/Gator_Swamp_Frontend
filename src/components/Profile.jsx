@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, Mail, Plus, Clock, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import ProfileButton from "./ProfileButton";
+import { profileService } from "../services/profileService";
 
 const Profile = () => {
   const { currentUser, getUserProfile, token } = useAuth();
@@ -15,19 +16,6 @@ const Profile = () => {
   const [showAllSubreddits, setShowAllSubreddits] = useState(false);
   const [showAllUsers, setShowAllUsers] = useState(false);
 
-  // Create an authFetch function since it's not provided by the context
-  const authFetch = async (url, options = {}) => {
-    const headers = {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`
-    };
-    
-    return fetch(url, {
-      ...options,
-      headers
-    });
-  };
-
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -35,48 +23,16 @@ const Profile = () => {
         console.log("Fetching profile data for user:", currentUser);
         
         // Fetch profile data
-        const profileResponse = await authFetch(
-          `http://localhost:8080/user/profile?userId=${currentUser.id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        
-        if (!profileResponse.ok) {
-          throw new Error("Failed to fetch profile data");
-        }
-        
-        const profileData = await profileResponse.json();
+        const profileData = await profileService.getProfile(currentUser.id, authFetch);
         console.log("Profile data received:", profileData);
         setProfileData(profileData);
 
         // Fetch all subreddits
-        const subredditsResponse = await authFetch(
-          "http://localhost:8080/subreddit",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (!subredditsResponse.ok)
-          throw new Error("Failed to fetch subreddits");
-        const subredditsData = await subredditsResponse.json();
+        const subredditsData = await profileService.getAllSubreddits(authFetch);
         setAllSubreddits(subredditsData);
 
         // Fetch all users
-        const usersResponse = await authFetch("http://localhost:8080/users", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (!usersResponse.ok) throw new Error("Failed to fetch users");
-        const usersData = await usersResponse.json();
+        const usersData = await profileService.getAllUsers(authFetch);
         setAllUsers(usersData.filter((user) => user.id !== currentUser.id));
       } catch (err) {
         setError("Failed to load data");
@@ -93,7 +49,7 @@ const Profile = () => {
       setError("No user information available");
       setLoading(false);
     }
-  }, [currentUser, token]);
+  }, [currentUser, authFetch]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not available";
