@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { MessageCircle, Send, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import ProfileButton from './ProfileButton';
@@ -8,6 +8,7 @@ import { messageService } from '../services/messageService';
 
 const Messages = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentUser, authFetch } = useAuth();
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -20,10 +21,16 @@ const Messages = () => {
   const userId = currentUser?.id;
 
   useEffect(() => {
+    // If no user is authenticated, redirect to login
+    if (!currentUser || !userId) {
+      navigate('/login');
+      return;
+    }
+
     if (location.state?.initialSelectedUser) {
       setSelectedUser(location.state.initialSelectedUser);
     }
-  }, [location.state]);
+  }, [location.state, currentUser, userId, navigate]);
 
   const formatMessageDate = (dateString) => {
     const date = new Date(dateString);
@@ -69,9 +76,12 @@ const Messages = () => {
     
     try {
       const allMessages = await messageService.getMessages(userId, authFetch);
+      
+      // Ensure allMessages is an array even if the response is null or undefined
+      const safeMessages = Array.isArray(allMessages) ? allMessages : [];
       const conversationsMap = new Map();
 
-      allMessages.forEach(msg => {
+      safeMessages.forEach(msg => {
         const partnerId = msg.fromId === userId ? msg.toId : msg.fromId;
         if (!conversationsMap.has(partnerId)) {
           conversationsMap.set(partnerId, []);
@@ -90,7 +100,7 @@ const Messages = () => {
         );
 
       setConversations(conversationsArray);
-      setMessages(allMessages);
+      setMessages(safeMessages);
 
       if (selectedUser) {
         markMessagesAsRead(selectedUser);
@@ -99,7 +109,7 @@ const Messages = () => {
       return conversationsArray;
     } catch (err) {
       console.error('Error in fetchMessages:', err);
-      setError('Failed to load messages: ' + err.message);
+      setError('Failed to load messages. Please try again later.');
       return [];
     }
   }, [userId, selectedUser, authFetch]);
@@ -202,9 +212,7 @@ const Messages = () => {
                     <div
                       key={partnerId}
                       onClick={() => setSelectedUser(partnerId)}
-                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                        selectedUser === partnerId ? 'bg-gray-50' : ''
-                      }`}
+                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${selectedUser === partnerId ? 'bg-gray-50' : ''}`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -260,9 +268,7 @@ const Messages = () => {
                   .map(message => (
                     <div
                       key={message.id}
-                      className={`flex ${
-                        message.fromId === userId ? 'justify-end' : 'justify-start'
-                      }`}
+                      className={`flex ${message.fromId === userId ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
                         className={`max-w-[70%] p-3 rounded-lg ${

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import GatorLogo2 from "../../assets/gator3.svg"; // Adding gator logo for consistency
 
 export const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -54,23 +55,30 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div className="bg-stone-100 flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl p-12">
-        <h1 className="text-6xl font-doto font-bold text-black text-center flex-2">
-          gator swamp
-        </h1>
-        <h2 className="text-2xl font-mono text-black mb-4 py-2 text-center">
+    <div className="bg-stone-100 flex items-center justify-center w-full min-h-screen p-4">
+      <form onSubmit={handleSubmit} className="w-full max-w-2xl p-4 md:p-12 flex flex-col">
+        <div className="flex flex-col md:flex-row items-center justify-between w-full mb-4">
+          <div className="flex-1 hidden md:block" />
+          <h1 className="text-4xl md:text-6xl font-doto font-bold text-black text-center">
+            gator swamp
+          </h1>
+          <div className="flex-1 flex justify-center md:justify-end mt-4 md:mt-0">
+            <img src={GatorLogo2} alt="Gator Swamp Logo" className="size-28 md:size-40" />
+          </div>
+        </div>
+        
+        <h2 className="text-xl md:text-2xl font-mono text-black mb-4 py-2 text-center">
           register
         </h2>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          <div className="mb-4 p-3 bg-white border border-black text-black text-center text-sm md:text-base">
             {error}
           </div>
         )}
 
-        <div className="mb-4  text-center">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-4 text-center px-4 md:px-12">
+          <label className="block text-black font-medium mb-2">
             username
           </label>
           <input
@@ -83,8 +91,8 @@ export const RegisterForm = () => {
           />
         </div>
 
-        <div className="mb-4 text-center">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-4 text-center px-4 md:px-12">
+          <label className="block text-black font-medium mb-2">
             email
           </label>
           <input
@@ -97,8 +105,8 @@ export const RegisterForm = () => {
           />
         </div>
 
-        <div className="mb-4 text-center">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-4 text-center px-4 md:px-12">
+          <label className="block text-black font-medium mb-2">
             password
           </label>
           <input
@@ -111,8 +119,8 @@ export const RegisterForm = () => {
           />
         </div>
 
-        <div className="mb-6 text-center">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="mb-6 text-center px-4 md:px-12">
+          <label className="block text-black font-medium mb-2">
             confirm password
           </label>
           <input
@@ -125,12 +133,24 @@ export const RegisterForm = () => {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-black text-white font-bold text-xl py-3 hover:bg-gray-900 focus:outline-none border-2 border-black transition-colors"
-        >
-          enter!
-        </button>
+        <div className="flex justify-center px-4 md:px-12">
+          <button
+            type="submit"
+            className="w-full sm:w-2/3 md:w-1/2 bg-black text-white font-bold text-xl py-2 md:py-3 hover:bg-gray-900 focus:outline-none border-2 border-black transition-colors"
+          >
+            enter!
+          </button>
+        </div>
+
+        <div className="mt-6 text-center">
+          <span className="text-black text-sm md:text-base">already registered? </span>
+          <a
+            href="/login"
+            className="font-bold text-black underline hover:text-gray-800 text-sm md:text-base"
+          >
+            log in here
+          </a>
+        </div>
       </form>
     </div>
   );

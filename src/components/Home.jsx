@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Post from './Post';
 import GatorRelax from '../assets/GatorRelax.svg';
-import ProfileButton from './ProfileButton';
 import { feedService } from '../services/feedService';
 
 const Home = () => {
@@ -63,25 +62,28 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <ProfileButton />
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="flex items-center justify-between w-full">
+    <div className="min-h-screen pt-16 sm:pt-20">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between w-full mb-4 sm:mb-6">
           <div className="flex-1" />
-          <h1 className="text-4xl font-doto font-bold text-gray-900 mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-doto font-bold text-gray-900 text-center">
             {posts.length > 0 ? "today's feed" : "recent posts"}
           </h1>
           <div className="flex-1 flex justify-end">
-            <img src={GatorRelax} alt="Gator Relaxing Logo" className="size-40" />
+            <img 
+              src={GatorRelax} 
+              alt="Gator Relaxing Logo" 
+              className="size-16 sm:size-28 md:size-40"
+            />
           </div>
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {posts.map(post => (
             <Post key={post.ID} post={post} />
           ))}
 
           {posts.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+            <div className="text-center py-8 sm:py-12 bg-white rounded-lg shadow-sm">
               <p className="text-gray-600 font-doto">No posts available</p>
             </div>
           )}
