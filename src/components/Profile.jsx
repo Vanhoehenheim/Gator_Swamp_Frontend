@@ -6,7 +6,7 @@ import ProfileButton from "./ProfileButton";
 import { profileService } from "../services/profileService";
 
 const Profile = () => {
-  const { currentUser, getUserProfile, token } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [allSubreddits, setAllSubreddits] = useState([]);
@@ -206,6 +206,8 @@ const Profile = () => {
                 </div>
               </Link>
             ))}
+
+            {/* This section should be rendered if there are no subreddits */}
           </div>
         )}
       </div>
