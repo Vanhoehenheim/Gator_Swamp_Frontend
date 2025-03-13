@@ -56,8 +56,7 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 mt-8">
-      <h1 className="text-3xl font-bold mb-6 font-doto">create a new post</h1>
+    <div className="max-w-2xl mx-auto pt-20 px-4 mt-8">
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
