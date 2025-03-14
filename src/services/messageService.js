@@ -29,7 +29,12 @@ export const messageService = {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(messageData)
+                // Convert to PascalCase for backend
+                body: JSON.stringify({
+                    fromId: messageData.fromId,
+                    toId: messageData.toId,
+                    content: messageData.content
+                })
             });
 
             if (!response.ok) {
@@ -57,9 +62,8 @@ export const messageService = {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    fromId: partnerId,
-                    toId: userId,
-                    messageIds
+                    messageId: messageIds[0], // Backend expects single message ID
+                    userId: userId
                 })
             });
 
@@ -82,7 +86,6 @@ export const messageService = {
     
     getUserProfile: async (userId, authFetch) => {
         try {
-            // Add validation to prevent undefined userId errors
             if (!userId) {
                 console.warn('Attempted to fetch profile with undefined userId');
                 return { username: 'Unknown User' };
@@ -102,7 +105,6 @@ export const messageService = {
             }
         } catch (error) {
             console.error('Error in getUserProfile:', error);
-            // Return a fallback object instead of throwing
             return { username: 'Unknown User' };
         }
     }
