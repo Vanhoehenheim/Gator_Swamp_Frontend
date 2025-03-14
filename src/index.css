@@ -7,9 +7,51 @@
 
 body {
   background-color: rgb(245 245 244);
-  font-family: 'Geist Mono', monospace;  /* Single font-family declaration */
+  font-family: 'Geist Mono', monospace;
   height: 100vh;
   padding-top: 0;
   letter-spacing: 0.025em;
   text-transform: lowercase;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.dark body {
+  background-color: #121721;
+  color: #e2e8f0;
+}
+
+/* Add smooth transitions for all color changes */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+}
+
+/* Dark mode customizations */
+.dark {
+  @apply bg-slate-900;
+}
+
+/* Card elements in dark mode */
+.dark .card,
+.dark [class*="card"],
+.dark div[role="dialog"] {
+  @apply bg-slate-700;
+}
+
+/* Input fields in dark mode */
+.dark input,
+.dark textarea,
+.dark select,
+.dark .input-field {
+  @apply bg-navy-900;
+}
+
+/* Make SVG images white in dark mode */
+.dark img[src$=".svg"] {
+  filter: invert(1) brightness(1.5);
+}
+
+/* Override any specific SVGs that shouldn't be inverted */
+.dark img.no-invert {
+  filter: none;
 }

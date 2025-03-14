@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm'
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -27,11 +28,14 @@ const NavigationWrapper = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="bg-stone-100 mx-0 min-h-screen">
-        <NavigationWrapper />
-      </div>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <div className="bg-stone-100 dark:bg-dark-slate-900 dark:text-gray-200 mx-0 min-h-screen transition-colors duration-200">
+          <NavigationWrapper />
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
+
 export default App;

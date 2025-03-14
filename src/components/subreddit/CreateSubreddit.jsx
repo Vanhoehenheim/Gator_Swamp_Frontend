@@ -44,7 +44,7 @@ const CreateSubreddit = () => {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100 pt-20 sm:pt-20 px-3 sm:px-4">
+    <div className="min-h-screen bg-stone-100 dark:bg-dark-slate-900 pt-20 sm:pt-20 px-3 sm:px-4">
       <div className="max-w-xl mx-auto">
 
         {error && (
@@ -53,9 +53,9 @@ const CreateSubreddit = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 bg-white p-4 sm:p-6 rounded-lg shadow">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 bg-white dark:bg-dark-slate-800 p-4 sm:p-6 rounded-lg shadow">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-white mb-1 sm:mb-2">
               Subreddit Name
             </label>
             <input
@@ -64,14 +64,14 @@ const CreateSubreddit = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-2 border rounded-lg dark:bg-navy-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               placeholder="Enter a unique name"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+            <label htmlFor="description" className="block text-sm font-medium dark:text-white text-gray-700 mb-1 sm:mb-2">
               Description
             </label>
             <textarea
@@ -80,7 +80,7 @@ const CreateSubreddit = () => {
               value={formData.description}
               onChange={handleChange}
               rows="3"
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-2 border rounded-lg dark:bg-navy-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               placeholder="What is this subreddit about?"
             />

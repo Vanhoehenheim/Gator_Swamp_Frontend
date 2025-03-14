@@ -82,6 +82,12 @@ export const messageService = {
     
     getUserProfile: async (userId, authFetch) => {
         try {
+            // Add validation to prevent undefined userId errors
+            if (!userId) {
+                console.warn('Attempted to fetch profile with undefined userId');
+                return { username: 'Unknown User' };
+            }
+            
             const response = await authFetch(`${config.apiUrl}/user/profile?userId=${userId}`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch user profile: ${response.status}`);
@@ -96,7 +102,8 @@ export const messageService = {
             }
         } catch (error) {
             console.error('Error in getUserProfile:', error);
-            throw error;
+            // Return a fallback object instead of throwing
+            return { username: 'Unknown User' };
         }
     }
 };

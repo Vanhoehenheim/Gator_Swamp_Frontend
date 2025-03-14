@@ -64,9 +64,9 @@ const CreatePost = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
+      <form onSubmit={handleSubmit} className="space-y-6 dark:bg-dark-slate-800 bg-white p-6 rounded-lg shadow">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
             post title
           </label>
           <input
@@ -81,7 +81,7 @@ const CreatePost = () => {
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
             content
           </label>
           <textarea
@@ -99,7 +99,7 @@ const CreatePost = () => {
           <button
             type="button"
             onClick={() => navigate(`/r/${subredditId}`)}
-            className="px-4 py-2 text-gray-700 hover:text-gray-900"
+            className="px-4 py-2 text-gray-700 hover:text-gray-900 dark:text-white"
           >
             cancel
           </button>

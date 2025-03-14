@@ -97,10 +97,10 @@ const SubredditView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-100 pt-16 sm:pt-20 pb-8">
+    <div className="min-h-screen dark:bg-dark-slate-900 bg-stone-100 pt-16 sm:pt-20 pb-8">
       <div className="max-w-3xl mx-auto px-3 sm:px-4">
         
-        <div className="bg-white lowercase rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white dark:bg-dark-slate-800 lowercase rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
             <div className="mb-3 sm:mb-0">
               <h1 className="text-2xl sm:text-3xl font-bold font-doto">{subreddit.Name}</h1>
