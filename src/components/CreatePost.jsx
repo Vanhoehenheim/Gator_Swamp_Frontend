@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
+import config from '../config';
 
 const CreatePost = () => {
   const { currentUser, authFetch } = useAuth();
@@ -19,7 +20,7 @@ const CreatePost = () => {
     setIsLoading(true);
 
     try {
-      const response = await authFetch('http://localhost:8080/post', {
+      const response = await authFetch(`${config.apiUrl}/post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
