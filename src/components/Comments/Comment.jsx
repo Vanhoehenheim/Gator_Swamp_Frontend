@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import VoteConfetti from "../animations/VoteConfetti";
+import config from "../../config";
 
 const Comment = ({ comment, onReply, postId, level = 0 }) => {
-  const { userId, authFetch } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [replyContent, setReplyContent] = useState("");
@@ -25,8 +26,9 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentComment, setCurrentComment] = useState(comment);
   const [voteState, setVoteState] = useState(null);
+  const [wasEdited, setWasEdited] = useState(false);
 
-  const canEdit = userId === comment.authorId;
+  const canEdit = currentUser && currentUser.id === comment.authorId;
 
   useEffect(() => {
     const fetchChildComments = async () => {
@@ -36,7 +38,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           const childrenData = await Promise.all(
             comment.children.map(async (childId) => {
               const response = await authFetch(
-                `http://localhost:8080/comment?commentId=${childId}`
+                `${config.apiUrl}/comment?commentId=${childId}`
               );
               if (!response.ok)
                 throw new Error("failed to fetch child comment");
@@ -61,6 +63,11 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   };
 
   const handleVote = async (isUpvote) => {
+    if (!currentUser || !currentUser.id) {
+      console.error("You must be logged in to vote");
+      return;
+    }
+
     // If trying to vote the same way again, ignore
     if (
       (isUpvote && voteState === "up") ||
@@ -70,28 +77,33 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     }
 
     try {
-      const response = await authFetch(`http://localhost:8080/comment/vote`, {
+      const response = await authFetch(`${config.apiUrl}/comment/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId,
-          commentId: comment.id,
+          userId: currentUser.id.toString(), // Ensure userId is a string
+          commentId: comment.id.toString(), // Ensure commentId is a string
           isUpvote,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        if (data.Code === "DUPLICATE") {
-          // If duplicate vote, we need to remove the previous vote first
-          return;
+        try {
+          const data = await response.json();
+          if (data.Code === "DUPLICATE") {
+            // If duplicate vote, we need to remove the previous vote first
+            return;
+          }
+          throw new Error(data.error || 'Failed to vote');
+        } catch (jsonError) {
+          // If the response is not valid JSON
+          throw new Error(`Failed to vote: ${response.statusText}`);
         }
-        throw new Error("Failed to vote");
       }
 
+      const data = await response.json();
       // Update vote state and comment data
       setVoteState(isUpvote ? "up" : "down");
       setCurrentComment(data);
@@ -163,6 +175,11 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
   };
 
   const handleEdit = async () => {
+    if (!currentUser || !currentUser.id) {
+      console.error("You must be logged in to edit");
+      return;
+    }
+
     if (editContent.trim() === comment.content) {
       setIsEditing(false);
       return;
@@ -174,7 +191,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
     }
 
     try {
-      const response = await authFetch(`http://localhost:8080/comment`, {
+      const response = await authFetch(`${config.apiUrl}/comment`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -190,19 +207,27 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
 
       const updatedComment = await response.json();
       setCurrentComment(updatedComment);
+      setWasEdited(true);
       setIsEditing(false);
     } catch (err) {
       console.error("Edit error:", err);
     }
   };
 
-  const handleSubmitReply = async (e) => {
-    e.preventDefault();
+  const handleSubmitReply = async () => {
     if (!replyContent.trim()) return;
 
     await onReply(comment.id, replyContent);
     setReplyContent("");
     setIsReplying(false);
+  };
+  
+  // Handle Ctrl+Enter to submit reply
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault();
+      handleSubmitReply();
+    }
   };
 
   const marginLeft = level > 0 ? `${level * 2}rem` : "0";
@@ -243,10 +268,11 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
         )}
         <div className="text-xs text-stone-300 font-medium mb-2 flex items-center justify-between">
           <div>
-            <span>By {currentComment.authorId}</span>
+            <span>By {currentComment.authorUsername}</span>
+            
             <span className="mx-2">•</span>
             <span>{formatDate(currentComment.createdAt)}</span>
-            {currentComment.updatedAt !== currentComment.createdAt && (
+            {wasEdited && (
               <span className="ml-2 text-gray-500">(edited)</span>
             )}
           </div>
@@ -291,17 +317,19 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
         </div>
 
         {isReplying && (
-          <form onSubmit={handleSubmitReply} className="mt-4 text-xs">
+          <div className="mt-4 text-xs">
             <textarea
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full p-2 border rounded-lg resize-none"
               rows="2"
               placeholder="Write a reply..."
             />
             <div className="flex gap-2 mt-2">
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmitReply}
                 className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs"
               >
                 post reply
@@ -317,7 +345,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
                 cancel
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
 

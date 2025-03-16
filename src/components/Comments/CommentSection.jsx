@@ -4,14 +4,20 @@ import Comment from "./Comment";
 import { commentService } from "../../services/commentService";
 
 const CommentSection = ({ postId }) => {
-  const { userId, authFetch } = useAuth();
+  const { currentUser, authFetch } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchComments();
+    if (postId) {
+      fetchComments();
+    } else {
+      setLoading(false);
+      setError("Invalid post ID");
+    }
   }, [postId]);
 
   const fetchComments = async () => {
@@ -37,38 +43,72 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  const handleComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
+  const handleComment = async () => {
+    if (!newComment.trim()) {
+      setError("Comment cannot be empty");
+      return;
+    }
+    
+    if (!currentUser || !currentUser.id) {
+      setError("You must be logged in to comment");
+      return;
+    }
+    
+    if (!postId) {
+      setError("Invalid post ID");
+      return;
+    }
 
     try {
+      setIsSubmitting(true);
+      setError(null);
+      
       await commentService.createComment({
         Content: newComment.trim(),
-        PostID: postId,
-        AuthorID: userId,
+        PostID: postId.toString(),
+        AuthorID: currentUser.id.toString(),
       }, authFetch);
 
-      await fetchComments(); // Refresh all comments
       setNewComment("");
+      await fetchComments(); // Refresh all comments
     } catch (err) {
       console.error("Comment error:", err);
-      setError("Failed to post comment");
+      setError("Failed to post comment: " + (err.message || "Unknown error"));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleReply = async (parentCommentId, content) => {
+    if (!currentUser || !currentUser.id) {
+      setError("You must be logged in to reply");
+      return;
+    }
+    
+    if (!postId) {
+      setError("Invalid post ID");
+      return;
+    }
+    
+    if (!parentCommentId) {
+      setError("Invalid parent comment ID");
+      return;
+    }
+    
     try {
+      setError(null);
+      
       await commentService.createComment({
         Content: content.trim(),
-        PostID: postId,
-        AuthorID: userId,
-        ParentID: parentCommentId,
+        PostID: postId.toString(),
+        AuthorID: currentUser.id.toString(),
+        ParentID: parentCommentId.toString(),
       }, authFetch);
 
       await fetchComments(); // Refresh all comments
     } catch (err) {
       console.error("Reply error:", err);
-      setError("Failed to post reply");
+      setError("Failed to post reply: " + (err.message || "Unknown error"));
     }
   };
 
@@ -78,29 +118,44 @@ const CommentSection = ({ postId }) => {
     );
   }
 
-  if (error) {
+  if (error && !comments.length) {
     return <div className="text-center py-4 text-red-600">{error}</div>;
   }
+
+  // Handle Enter key press in textarea while allowing shift+enter for new lines
+  const handleKeyDown = (e) => {
+    // Submit on Ctrl+Enter
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault();
+      handleComment();
+    }
+  };
 
   return (
     <div className="border-t pt-6 lowercase">
       <h2 className="text-lg mb-4">comments</h2>
 
-      <form onSubmit={handleComment} className="mb-6">
+      <div className="mb-6">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full p-3 border rounded-lg resize-none text-sm"
           rows="3"
           placeholder="add a comment..."
         />
+        {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
         <button
-          type="submit"
-          className="mt-2 px-4 font-semibold py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-600"
+          type="button" 
+          onClick={handleComment}
+          disabled={isSubmitting || !currentUser}
+          className={`mt-2 px-4 font-semibold py-2 ${
+            isSubmitting || !currentUser ? "bg-gray-400" : "bg-stone-800 hover:bg-stone-600"
+          } text-white rounded-lg`}
         >
-          post comment
+          {isSubmitting ? "posting..." : currentUser ? "post comment" : "login to comment"}
         </button>
-      </form>
+      </div>
 
       <div className="space-y-4">
         {comments.map((comment) => (

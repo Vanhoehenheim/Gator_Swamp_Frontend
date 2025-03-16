@@ -61,10 +61,10 @@ const PostDetail = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 lowercase">
+    <div className=" pt-20 max-w-3xl mx-auto px-4 py-8 lowercase">
       <article className="bg-stone-50 rounded-lg p-6 shadow-sm border border-gray-100">
         <header className="mb-4">
-          <h1 className="text-3xl font-doto font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {post.Title}
           </h1>
           <div className="text-xs text-stone-300">
@@ -74,7 +74,7 @@ const PostDetail = () => {
           </div>
         </header>
 
-        <div className="prose text-gray-800 mb-6 whitespace-pre-wrap">
+        <div className="text-sm text-gray-800 mb-6 whitespace-pre-wrap">
           {post.Content}
         </div>
 
