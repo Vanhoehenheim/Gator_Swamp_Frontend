@@ -4,6 +4,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, Mail, Plus, Clock, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { profileService } from "../services/profileService";
+import { Analytics } from "@vercel/analytics/react"
 
 const Profile = () => {
   const { currentUser, authFetch } = useAuth();
@@ -102,6 +103,7 @@ const Profile = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 pt-20 md:pt-28 bg-stone-100 dark:bg-dark-slate-900 min-h-screen">
+      <Analytics />
       {/* Profile Header Card */}
       <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
         <div className="flex flex-col space-y-3 sm:space-y-4">

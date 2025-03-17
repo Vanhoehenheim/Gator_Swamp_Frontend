@@ -6,6 +6,7 @@ import GatorLogo from "../../assets/gator.svg";
 import GatorLogo1 from "../../assets/gator2.svg";
 import GatorLogo2 from "../../assets/gator3.svg";
 import { Sun, Moon } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/react"
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -39,6 +40,7 @@ export const LoginForm = () => {
 
   return (
     <div className="bg-stone-100 dark:bg-dark-slate-900 flex items-center justify-center w-full min-h-screen p-4 transition-colors">
+                <Analytics />
       <form onSubmit={handleSubmit} className="w-full max-w-2xl flex flex-col justify-center align-middle">
         <div className="flex flex-col md:flex-row items-center justify-between w-full mb-4">
           <div className="flex-1 hidden md:block" />
