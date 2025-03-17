@@ -9,7 +9,10 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm'
 import { Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import { Analytics } from '@vercel/analytics/next';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 // Component to handle app layout
 const AppLayout = () => {
