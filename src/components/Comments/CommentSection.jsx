@@ -140,7 +140,7 @@ const CommentSection = ({ postId }) => {
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 border rounded-lg resize-none text-sm"
+          className="w-full p-3 border rounded-lg resize-none text-sm bg-slate-100 dark:bg-dark-slate-700 dark:text-stone-200"
           rows="3"
           placeholder="add a comment..."
         />
