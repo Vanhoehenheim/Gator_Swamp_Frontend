@@ -54,7 +54,7 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-dark-slate-900 transition-colors">
+      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors">
         <div className="text-xl text-gray-300 font-doto">Loading posts...</div>
       </div>
     );
@@ -62,7 +62,7 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-dark-slate-900 transition-colors">
+      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors">
         <div className="text-xl text-red-600 font-doto">{error}</div>
       </div>
     );
