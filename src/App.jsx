@@ -29,7 +29,6 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <div className="bg-stone-100 dark:bg-dark-slate-900 dark:text-gray-200 mx-0 min-h-screen transition-colors duration-200">
-          <Analytics />
           <AppLayout />
         </div>
       </AuthProvider>
