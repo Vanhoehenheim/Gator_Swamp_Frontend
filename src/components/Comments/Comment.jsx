@@ -234,19 +234,19 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
 
   return (
     <div style={{ marginLeft }} className="my-4">
-      <div className="bg-stone-100 p-4 rounded-lg text-sm">
+      <div className="bg-stone-100 dark:bg-dark-slate-700 p-4 rounded-lg text-sm">
         {isEditing ? (
           <div className="mt-2">
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full p-2 border rounded-lg resize-none"
+              className="w-full p-2 border rounded-lg dark:bg-dark-slate-700 resize-none"
               rows="3"
             />
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 mb-2 text-xs">
               <button
                 onClick={handleEdit}
-                className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                className="flex items-center gap-1 px-3 py-1 bg-navy-800 text-white rounded-lg hover:bg-blue-700"
               >
                 <Check size={16} />
                 Save
@@ -256,7 +256,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
                   setIsEditing(false);
                   setEditContent(currentComment.content);
                 }}
-                className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
               >
                 <X size={16} />
                 Cancel
@@ -264,9 +264,9 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             </div>
           </div>
         ) : (
-          <div className="text-black text-left">{currentComment.content}</div>
+          <div className="text-black dark:text-white font-semibold text-left">{currentComment.content}</div>
         )}
-        <div className="text-xs text-stone-300 font-medium mb-2 flex items-center justify-between">
+        <div className="text-xs dark:text-stone-300 mb-2 flex items-center justify-between">
           <div>
             <span>By {currentComment.authorUsername}</span>
             
@@ -299,7 +299,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsReplying(!isReplying)}
-              className="text-xs text-black hover:text-blue-800 flex items-center gap-1"
+              className="text-xs dark:text-stone-300 dark:hover:text-stone-600 text-black hover:text-blue-800 flex items-center gap-1"
             >
               <Reply size={16} />
               reply
@@ -307,7 +307,7 @@ const Comment = ({ comment, onReply, postId, level = 0 }) => {
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="text-xs dark:text-blue-300 dark:hover:text-blue-600 text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
                 <Edit2 size={16} />
                 edit

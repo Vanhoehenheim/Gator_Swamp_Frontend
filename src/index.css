@@ -12,7 +12,6 @@ body {
   padding-top: 0;
   letter-spacing: 0.025em;
   text-transform: lowercase;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .dark body {
@@ -20,11 +19,6 @@ body {
   color: #e2e8f0;
 }
 
-/* Add smooth transitions for all color changes */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 200ms;
-}
 
 /* Dark mode customizations */
 .dark {

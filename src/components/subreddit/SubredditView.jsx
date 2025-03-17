@@ -97,7 +97,7 @@ const SubredditView = () => {
   }
 
   return (
-    <div className="min-h-screen dark:bg-dark-slate-900 bg-stone-100 pt-16 sm:pt-20 pb-8">
+    <div className="min-h-screen pt-20 md:pt-28 dark:bg-dark-slate-900 bg-stone-100 pb-8">
       <div className="max-w-3xl mx-auto px-3 sm:px-4">
         
         <div className="bg-white dark:bg-dark-slate-800 lowercase rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">

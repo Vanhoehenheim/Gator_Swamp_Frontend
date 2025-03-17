@@ -33,7 +33,7 @@ export const postService = {
         return response.json();
     },
 
-    votePost: async (postId, userId, isUpvote, authFetch) => {
+    votePost: async (postId, userId, isUpvote, isRemovingVote = false, authFetch) => {
         const response = await authFetch(`${config.apiUrl}/post/vote`, {
             method: 'POST',
             headers: {
@@ -42,13 +42,25 @@ export const postService = {
             body: JSON.stringify({
                 userId: userId.toString(), // Ensure userId is a string
                 postId: postId.toString(), // Ensure postId is a string
-                isUpvote
+                isUpvote,
+                removeVote: isRemovingVote // New parameter to handle vote toggling
             }),
         });
 
         if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to vote');
+            // Handle 409 conflict specially for "Already voted" messages
+            if (response.status === 409) {
+                const text = await response.text();
+                throw new Error(text);
+            }
+            
+            try {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to vote');
+            } catch (jsonError) {
+                // If response is not valid JSON, use status text
+                throw new Error(`Failed to vote: ${response.statusText}`);
+            }
         }
         return response.json();
     }

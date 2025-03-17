@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
-import Home from '../components/Home';
+import Home from '../components/Feed';
 import Profile from '../components/Profile';
 import Messages from '../components/Messages';
 import App from '../App';

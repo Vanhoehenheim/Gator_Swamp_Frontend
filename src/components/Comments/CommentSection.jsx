@@ -150,7 +150,7 @@ const CommentSection = ({ postId }) => {
           onClick={handleComment}
           disabled={isSubmitting || !currentUser}
           className={`mt-2 px-4 font-semibold py-2 ${
-            isSubmitting || !currentUser ? "bg-gray-400" : "bg-stone-800 hover:bg-stone-600"
+            isSubmitting || !currentUser ? "bg-gray-400" : "bg-stone-800 dark:bg-stone-200 dark:text-stone-800 dark:hover:bg-stone-600"
           } text-white rounded-lg`}
         >
           {isSubmitting ? "posting..." : currentUser ? "post comment" : "login to comment"}
