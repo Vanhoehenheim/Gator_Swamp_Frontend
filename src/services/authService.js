@@ -11,7 +11,7 @@ export const authService = {
                 username,
                 email,
                 password,
-                karma: 0,
+                karma: 300,
             }),
         });
         

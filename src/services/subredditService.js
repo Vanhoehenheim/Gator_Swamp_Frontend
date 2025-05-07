@@ -58,10 +58,15 @@ export const subredditService = {
             body: JSON.stringify(subredditData)
         });
 
-        const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to create subreddit');
+            const errorText = await response.text();
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.error || errorJson.message || errorText || 'Failed to create subreddit');
+            } catch {
+                throw new Error(errorText || 'Failed to create subreddit');
+            }
         }
-        return data;
+        return response.json();
     }
 };

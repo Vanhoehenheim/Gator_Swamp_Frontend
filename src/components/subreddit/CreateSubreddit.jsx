@@ -47,7 +47,7 @@ const CreateSubreddit = () => {
         </button>
 
         {error && (
-          <div className="mb-4 p-2 sm:p-3 bg-red-100 text-red-700 text-sm rounded-lg">
+          <div className="mb-4 p-3 md:p-4 bg-white dark:bg-dark-slate-700 border border-black dark:border-dark-slate-600 text-red-600 dark:text-red-400 text-sm md:text-base rounded-lg text-center">
             {error.message}
           </div>
         )}
