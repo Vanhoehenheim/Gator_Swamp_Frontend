@@ -1,57 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, Mail, Plus, Clock, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
-import { profileService } from "../services/profileService";
+import { useUserProfile, useAllSubreddits, useAllUsers } from '../hooks/useProfileData';
 import { Analytics } from "@vercel/analytics/react"
 
 const Profile = () => {
-  const { currentUser, authFetch } = useAuth();
+  const { currentUser } = useAuth();
   const { darkMode } = useTheme();
   const navigate = useNavigate();
-  const [profileData, setProfileData] = useState(null);
-  const [allSubreddits, setAllSubreddits] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showAllSubreddits, setShowAllSubreddits] = useState(false);
   const [showAllUsers, setShowAllUsers] = useState(false);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-        console.log("Fetching profile data for user:", currentUser);
-        
-        // Fetch profile data
-        const profileData = await profileService.getProfile(currentUser.id, authFetch);
-        console.log("Profile data received:", profileData);
-        setProfileData(profileData);
+  const { 
+      data: profileData, 
+      isLoading: isLoadingProfile, 
+      isError: isErrorProfile, 
+      error: errorProfile 
+  } = useUserProfile(currentUser?.id);
 
-        // Fetch all subreddits
-        const subredditsData = await profileService.getAllSubreddits(authFetch);
-        setAllSubreddits(subredditsData);
+  const { 
+      data: allSubreddits = [], 
+      isLoading: isLoadingSubreddits, 
+      isError: isErrorSubreddits, 
+      error: errorSubreddits 
+  } = useAllSubreddits();
 
-        // Fetch all users
-        const usersData = await profileService.getAllUsers(authFetch);
-        setAllUsers(usersData.filter((user) => user.id !== currentUser.id));
-      } catch (err) {
-        setError("Failed to load data");
-        console.error("Data fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { 
+      data: allUsersData = [], 
+      isLoading: isLoadingUsers, 
+      isError: isErrorUsers, 
+      error: errorUsers 
+  } = useAllUsers();
 
-    if (currentUser && currentUser.id) {
-      fetchAllData();
-    } else {
-      console.error("No current user found");
-      setError("No user information available");
-      setLoading(false);
-    }
-  }, [currentUser, authFetch]);
+  const isLoading = isLoadingProfile || isLoadingSubreddits || isLoadingUsers;
+  const isError = isErrorProfile || isErrorSubreddits || isErrorUsers;
+  const error = errorProfile || errorSubreddits || errorUsers;
+
+  const allUsers = allUsersData.filter(user => user.id !== currentUser?.id);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Not available";
@@ -85,7 +72,7 @@ const Profile = () => {
     navigate("/messages", { state: { initialSelectedUser: userId } });
   };
 
-  if (loading) {
+  if (isLoading && !profileData) {
     return (
       <div className="flex justify-center items-center min-h-screen p-4 bg-stone-100 dark:bg-dark-slate-900">
         <div className="text-lg md:text-xl text-gray-600 dark:text-gray-300">Loading profile...</div>
@@ -93,10 +80,18 @@ const Profile = () => {
     );
   }
 
-  if (error) {
+  if (isError && !profileData) {
     return (
       <div className="flex justify-center items-center min-h-screen p-4 bg-stone-100 dark:bg-navy-800">
-        <div className="text-lg md:text-xl text-red-600">{error}</div>
+        <div className="text-lg md:text-xl text-red-600">{error instanceof Error ? error.message : 'Failed to load profile data'}</div>
+      </div>
+    );
+  }
+
+  if (!currentUser?.id && !isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen p-4 bg-stone-100 dark:bg-dark-slate-900">
+        <div className="text-lg md:text-xl text-gray-600 dark:text-gray-300">Please log in to view your profile.</div>
       </div>
     );
   }
@@ -104,7 +99,6 @@ const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 pt-20 md:pt-28 bg-stone-100 dark:bg-dark-slate-900 min-h-screen">
       <Analytics />
-      {/* Profile Header Card */}
       <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
         <div className="flex flex-col space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
@@ -144,15 +138,14 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* User's Subreddit Memberships */}
-      <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white">
-          your subreddit memberships
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {profileData?.subredditID &&
-          profileData.subredditID.length > 0 ? (
-            profileData.subredditID.map((id, index) => (
+      {profileData?.subredditID &&
+      profileData.subredditID.length > 0 ? (
+        <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white">
+            your subreddit memberships
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {profileData.subredditID.map((id, index) => (
               <Link
                 key={id}
                 to={`/r/${id}`}
@@ -160,14 +153,13 @@ const Profile = () => {
               >
                 r/{profileData.subredditName[index]}
               </Link>
-            ))
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">no subreddit memberships yet</p>
-          )}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">no subreddit memberships yet</p>
+      )}
 
-      {/* Browse All Subreddits Section */}
       <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
         <div className="flex justify-between items-center mb-3 sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -191,29 +183,29 @@ const Profile = () => {
 
         {showAllSubreddits && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {allSubreddits.map((subreddit) => (
+            {isLoadingSubreddits ? <p>Loading subreddits...</p> : isErrorSubreddits ? <p className="text-red-500">Error loading subreddits</p> :
+             allSubreddits.length > 0 ? allSubreddits.map((subreddit) => (
               <Link
-                key={subreddit.ID}
-                to={`/r/${subreddit.ID}`}
+                key={subreddit.id}
+                to={`/r/${subreddit.id}`}
                 className="p-3 sm:p-4 border dark:border-dark-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-slate-700 transition-colors"
               >
                 <h3 className="font-medium text-base sm:text-lg text-gray-900 dark:text-white">
-                  {subreddit.Name}
+                  {subreddit.name}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                  {subreddit.Description}
+                  {subreddit.description}
                 </p>
                 <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {subreddit.Members || 0} members •
-                  Created {formatDate(subreddit.CreatedAt)}
+                  {subreddit.members || 0} members •
+                  Created {formatDate(subreddit.createdAt)}
                 </div>
               </Link>
-            ))}
+            )) : <p>No subreddits found.</p>}
           </div>
         )}
       </div>
 
-      {/* Browse Users Section */}
       <div className="bg-white dark:bg-dark-slate-800 rounded-lg shadow-lg p-4 sm:p-6 transition-colors">
         <div className="flex justify-between items-center mb-3 sm:mb-4">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">start a conversation</h2>
@@ -227,7 +219,8 @@ const Profile = () => {
 
         {showAllUsers && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {allUsers.map((user) => (
+            {isLoadingUsers ? <p>Loading users...</p> : isErrorUsers ? <p className="text-red-500">Error loading users</p> :
+             allUsers.length > 0 ? allUsers.map((user) => (
               <button
                 key={user.ID || user.id}
                 onClick={() => navigateToMessages(user.ID || user.id)}
@@ -248,7 +241,7 @@ const Profile = () => {
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
                 </div>
               </button>
-            ))}
+            )) : <p>No other users found.</p>}
           </div>
         )}
       </div>

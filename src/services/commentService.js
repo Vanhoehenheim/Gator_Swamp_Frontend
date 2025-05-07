@@ -17,7 +17,9 @@ export const commentService = {
     },
 
     getPostComments: async (postId, authFetch) => {
-        const response = await authFetch(`${config.apiUrl}/comment/post?postId=${postId}`);
+        const response = await authFetch(`${config.apiUrl}/comment/post?postId=${postId}`, {
+             bypassCache: true 
+        });
         if (!response.ok) {
             throw new Error('Failed to load comments');
         }
@@ -47,21 +49,39 @@ export const commentService = {
         return response.json();
     },
 
-    voteComment: async (commentId, userId, isUpvote, authFetch) => {
+    voteComment: async (commentId, userId, voteDirection, authFetch) => {
+        let apiPayload = {
+            commentId,
+            userId,
+            isUpvote: false, // Default
+            removeVote: false // Default
+        };
+
+        if (voteDirection === 'up') {
+            apiPayload.isUpvote = true;
+            apiPayload.removeVote = false;
+        } else if (voteDirection === 'down') {
+            apiPayload.isUpvote = false;
+            apiPayload.removeVote = false;
+        } else if (voteDirection === 'none') {
+            // When removing a vote, the backend actor determines the original vote type.
+            // Setting isUpvote to false here is a neutral choice; removeVote:true is the key.
+            apiPayload.isUpvote = false; 
+            apiPayload.removeVote = true;
+        }
+
         const response = await authFetch(`${config.apiUrl}/comment/vote`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                commentId,
-                userId,
-                isUpvote
-            }),
+            body: JSON.stringify(apiPayload),
         });
 
         if (!response.ok) {
-            throw new Error('Failed to vote on comment');
+            const errorBody = await response.text();
+            console.error('Failed to vote on comment - Response:', response.status, errorBody);
+            throw new Error(`Failed to vote on comment: ${response.status} ${errorBody}`);
         }
         return response.json();
     },

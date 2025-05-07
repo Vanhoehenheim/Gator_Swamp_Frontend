@@ -58,6 +58,7 @@ export const postService = {
                 const data = await response.json();
                 throw new Error(data.error || 'Failed to vote');
             } catch (jsonError) {
+                console.error("Error parsing JSON:", jsonError);
                 // If response is not valid JSON, use status text
                 throw new Error(`Failed to vote: ${response.statusText}`);
             }

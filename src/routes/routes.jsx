@@ -6,10 +6,10 @@ import Home from '../components/Feed';
 import Profile from '../components/Profile';
 import Messages from '../components/Messages';
 import App from '../App';
-import PostDetail from '../components/PostDetail';
+import PostDetail from '../components/post/PostDetail';
 import CreateSubreddit from '../components/subreddit/CreateSubreddit';
 import SubredditView from '../components/subreddit/SubredditView';
-import CreatePost from '../components/CreatePost';
+import CreatePost from '../components/post/CreatePost';
 
 export const router = createBrowserRouter([
   {

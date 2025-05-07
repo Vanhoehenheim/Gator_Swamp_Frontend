@@ -62,8 +62,8 @@ export const messageService = {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    messageId: messageIds[0], // Backend expects single message ID
-                    userId: userId
+                    messageIds, // Send all message IDs as an array
+                    userId
                 })
             });
 

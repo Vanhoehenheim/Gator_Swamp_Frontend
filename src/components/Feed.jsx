@@ -1,69 +1,56 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState,  useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import Post from './Post';
 import GatorRelax from '../assets/GatorRelax.svg';
-import { feedService } from '../services/feedService';
 import { ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react';
-import { postService } from '../services/postService';
+import { useFeedPosts, useVotePostMutation } from '../hooks/usePostData';
+import PropTypes from 'prop-types';
 // Note: The Navbar component should be imported and used at the App level,
 // not removed or replaced by this component
 
-const Home = () => {
-  const { currentUser, authFetch } = useAuth();
-  const { darkMode } = useTheme();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        console.log("Fetching posts for user:", currentUser);
-        
-        const feedData = await feedService.getUserFeed(currentUser.id, authFetch);
-        
-        if (!feedData || feedData.length === 0) {
-          const recentPosts = await feedService.getRecentPosts(authFetch);
-          if (!recentPosts || recentPosts.length === 0) {
-            setError('No posts available');
-            setPosts([]);
-          } else {
-            setPosts(recentPosts);
-          }
-        } else {
-          setPosts(feedData);
-        }
-      } catch (err) {
-        setError('Failed to load posts');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    if (currentUser && currentUser.id) {
-      fetchPosts();
-    } else {
-      setError('No user information available');
-      setLoading(false);
-    }
-  }, [currentUser, authFetch]);
+// Helper for safe date formatting (similar to Post.jsx fix)
+const formatDisplayDate = (dateString) => {
+  if (!dateString) return "Unknown date";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date"; // Check if date is valid
+    // Use your preferred formatting
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    }).format(date);
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "Error formatting date";
+  }
+};
 
-  if (loading) {
+const Home = () => {
+  const { currentUser } = useAuth();
+
+  const { 
+      data: posts = [], 
+      isLoading, 
+      isError, 
+      error, 
+      isFetching // Use isFetching for refresh indicators if needed
+  } = useFeedPosts();
+
+  if (isLoading) { // Use isLoading from useFeedPosts
     return (
-      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors">
-        <div className="text-xl text-gray-300 font-doto">Loading posts...</div>
+      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors pt-20">
+        <div className="text-xl text-gray-600 dark:text-gray-300 font-doto">Loading posts...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (isError) { // Use isError from useFeedPosts
     return (
-      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors">
-        <div className="text-xl text-red-600 font-doto">{error}</div>
+      <div className="flex justify-center items-center min-h-screen dark:bg-dark-slate-900 transition-colors pt-20">
+        <div className="text-xl text-red-600 font-doto">{error?.message || 'Failed to load feed'}</div>
       </div>
     );
   }
@@ -80,165 +67,106 @@ const Home = () => {
             className="h-12 w-12" 
           />
           <h1 className="text-2xl font-doto text-gray-900 dark:text-white font-bold">
-            today's feed
+            {currentUser?.id ? 'your feed' : 'recent posts'} {/* Dynamic title */}
           </h1>
           
         </div>
         
         <div className="space-y-4">
+          {/* Use posts from useFeedPosts */}
           {posts.map(post => (
-            <PostCard key={post.ID} post={post} authFetch={authFetch} currentUser={currentUser} />
+            <PostCard key={post.ID || post.id} post={post} /> // Remove authFetch/currentUser props if mutation handles context
           ))}
 
-          {posts.length === 0 && (
-            <div className="text-center py-6 bg-dark-slate-800 rounded">
-              <p className="text-gray-400 font-doto">No posts available</p>
+          {posts.length === 0 && !isLoading && ( // Ensure loading is false before showing no posts
+            <div className="text-center py-6 bg-white dark:bg-dark-slate-800 rounded shadow-sm">
+              <p className="text-gray-500 dark:text-gray-400 font-doto">No posts available</p>
             </div>
           )}
         </div>
+        {isFetching && (
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">Refreshing feed...</div>
+        )}
       </div>
     </div>
   );
 };
 
-// PostCard component that preserves your original styling but adds mobile improvements
-const PostCard = ({ post, authFetch, currentUser }) => {
+// PostCard component - Refactored for useVotePostMutation and safe date formatting
+const PostCard = ({ post }) => { // Removed authFetch, currentUser - get from context within mutation
   const [expanded, setExpanded] = useState(false);
-  const [voteState, setVoteState] = useState(null);
-  const [currentPost, setCurrentPost] = useState(post);
+  const { currentUser } = useAuth(); // Only need currentUser
   const navigate = useNavigate();
-  
-  // Truncate content for preview with your original styling
+
+  // Use the custom vote mutation hook
+  const { mutate: votePost, isPending: isVoting } = useVotePostMutation();
+
+  // --- Event Handlers ---
+  const handleVoteClick = (isUpvote, e) => {
+    e.stopPropagation(); // Prevent triggering navigation
+    if (!currentUser?.id) {
+        // TODO: Show login prompt/toast
+        return;
+    }
+    
+    const postId = post.ID || post.id;
+    // Use voteState (which is already normalized to 'up', 'down', or null) instead of post.userVotes
+    const isRemovingVote = (isUpvote && voteState === 'up') || (!isUpvote && voteState === 'down');
+
+    // Call mutate from the hook
+    votePost({ postId, isUpvote, isRemovingVote });
+  };
+
+  const handlePostClick = () => {
+    navigate(`/posts/${post.ID || post.id}`);
+  };
+
+  // --- Render Logic ---
   const previewContent = post.Content?.length > 100 
     ? `${post.Content.substring(0, 100)}...` 
     : post.Content;
   
-  const formattedDate = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric', 
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  }).format(new Date(post.CreatedAt));
-
-  // Check for existing vote when component mounts
-  useEffect(() => {
-    if (currentUser?.id && post.UserVotes) {
-      const userVote = post.UserVotes[currentUser.id];
-      if (userVote !== undefined) {
-        setVoteState(userVote ? 'up' : 'down');
-      }
-    }
-  }, [post, currentUser]);
-
-  const handlePostClick = () => {
-    navigate(`/posts/${post.ID}`);
-  };
-
-  const handleVote = async (isUpvote, e) => {
-    // Stop the click from bubbling up to the post card
-    e.stopPropagation();
-    
-    if (!currentUser?.id) {
-      console.error('Please login to vote');
-      return;
-    }
-    
-    // Determine the voting action based on current state
-    const isRemovingVote = (isUpvote && voteState === 'up') || (!isUpvote && voteState === 'down');
-    const isChangingVote = (isUpvote && voteState === 'down') || (!isUpvote && voteState === 'up');
-    
-    try {
-      // Current vote state for optimistic UI update
-      let newVoteState;
-      
-      if (isRemovingVote) {
-        // Toggle vote off
-        newVoteState = null;
-      } else {
-        // Either setting a new vote or changing an existing vote
-        newVoteState = isUpvote ? 'up' : 'down';
-      }
-      
-      // Update UI optimistically
-      setVoteState(newVoteState);
-      
-      // Optimistically update vote counts
-      const updatedPost = { ...currentPost };
-      
-      // First, reverse any previous vote if there was one
-      if (voteState === 'up') {
-        updatedPost.Upvotes = Math.max(0, updatedPost.Upvotes - 1);
-      } else if (voteState === 'down') {
-        updatedPost.Downvotes = Math.max(0, updatedPost.Downvotes - 1);
-      }
-      
-      // Then add the new vote if not removing
-      if (newVoteState === 'up') {
-        updatedPost.Upvotes += 1;
-      } else if (newVoteState === 'down') {
-        updatedPost.Downvotes += 1;
-      }
-      
-      updatedPost.Karma = updatedPost.Upvotes - updatedPost.Downvotes;
-      setCurrentPost(updatedPost);
-      
-      // Send request to server
-      const serverUpdatedPost = await postService.votePost(
-        post.ID, 
-        currentUser.id, 
-        isUpvote,
-        isRemovingVote, // Pass flag to indicate if we're removing a vote
-        authFetch
-      );
-      
-      // Update with actual server data
-      setCurrentPost(serverUpdatedPost);
-      
-    } catch (err) {
-      console.error('Voting error:', err);
-      // Revert to original post data on error by refetching
-      try {
-        const refreshedPost = await postService.getPost(post.ID, authFetch);
-        setCurrentPost(refreshedPost);
-        
-        // Reset vote state based on refreshed data
-        if (currentUser?.id && refreshedPost.UserVotes) {
-          const userVote = refreshedPost.UserVotes[currentUser.id];
-          setVoteState(userVote !== undefined ? (userVote ? 'up' : 'down') : null);
-        }
-      } catch (refreshErr) {
-        console.error('Failed to refresh post data:', refreshErr);
-      }
-      
-      // Only show error to user if it's not an "Already voted" error
-      if (!err.message?.includes('Already voted')) {
-        console.error(err.message);
-      }
-    }
-  };
+  // Use safe date formatter
+  const formattedDate = formatDisplayDate(post.createdAt);
+  
+  // Determine vote state directly from post data (updated by RQ cache)
+  const voteState = useMemo(() => {
+      if (!currentUser?.id) return null;
+      // Use the currentUserVote field added by the optimistic update
+      // Log calculated voteState
+      const calculatedVoteState = post.currentUserVote || null; // 'up', 'down', or null
+      return calculatedVoteState;
+  }, [post?.currentUserVote, currentUser?.id]);
 
   return (
     <div 
-      className="bg-white dark:bg-dark-slate-800 rounded p-4 shadow-sm cursor-pointer transition-opacity hover:opacity-95 active:opacity-90"
+      className="bg-white dark:bg-dark-slate-800 rounded p-4 shadow-sm cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-dark-slate-700"
       onClick={handlePostClick}
     >
-      {/* Post title - preserving your original font */}
-      <h2 className="text-xl te text-gray-900 dark:text-white mb-1">
-        {currentPost.Title}
+      <h2 className="text-xl text-gray-900 dark:text-white mb-1">
+        {post.title}
       </h2>
       
-      {/* Post metadata */}
-      <div className="text-xs text-gray-900 dark:text-white font-doto mb-3">
-        by {currentPost.AuthorUsername || 'unknown'} • {formattedDate}
+      <div className="text-xs text-gray-300 dark:text-gray-600 mb-3">
+        {post.subredditName && (
+          <>
+            <span className="font-semibold text-blue-600 dark:text-blue-400 hover:underline" onClick={(e) => {
+                e.stopPropagation(); // Prevent card click
+                navigate(`/r/${post.subredditId}`); // Navigate using subreddit ID
+            }}>
+              r/{post.subredditName}
+            </span>
+            <span className="mx-1">•</span>
+          </>
+        )}
+        by {post.authorUsername || 'unknown'} • {formattedDate} {/* Use safe formatter */}
       </div>
       
-      {/* Post content with expand/collapse */}
-      <div className="text-gray-900 dark:text-white mb-4 test-xs">
-        {expanded ? currentPost.Content : previewContent}
-        {!expanded && currentPost.Content?.length > 100 && (
+      <div className="text-sm text-gray-800 dark:text-gray-200 mb-4 break-words">
+        {expanded ? post.Content : previewContent}
+        {!expanded && post.Content?.length > 100 && (
           <button 
-            className="text-gray-400 hover:text-white ml-1 text-xs"
+            className="text-blue-500 hover:underline ml-1 text-xs"
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(true);
@@ -248,54 +176,58 @@ const PostCard = ({ post, authFetch, currentUser }) => {
           </button>
         )}
       </div>
-      
-      {/* Interactive footer with vote buttons matching PostDetail.jsx styling */}
-      <div className="flex items-center border-t border-dark-slate-700 pt-2 text-sm">
+
+      {/* Vote buttons */}
+      <div className="flex items-center space-x-4 text-gray-500 dark:text-gray-400">
         <button 
-          onClick={(e) => handleVote(true, e)}
-          className={`flex items-center space-x-2 transition-colors ${
-            voteState === 'up' 
-              ? 'text-blue-600 font-medium' 
-              : 'text-gray-600 hover:text-blue-600 dark:text-stone-300'
-          }`}
-          aria-label={voteState === 'up' ? 'Remove upvote' : 'Upvote'}
+          onClick={(e) => handleVoteClick(true, e)} 
+          disabled={isVoting} 
+          className={`flex items-center space-x-1 hover:text-green-500 disabled:opacity-50 ${voteState === 'up' ? 'text-green-500' : ''}`}
         >
-          <ThumbsUp 
-            size={15} 
-            className={`transition-all ${voteState === 'up' ? 'fill-current' : ''}`} 
-          />
-          <span className="ml-1">{currentPost.Upvotes || 0}</span>
+          <ThumbsUp size={16} /> 
+          {/* Display Karma instead of upvotes */}
+          <span className="text-xs">{post.upvotes || 0}</span>
         </button>
-        
         <button 
-          onClick={(e) => handleVote(false, e)}
-          className={`flex items-center space-x-2 ml-4 transition-colors ${
-            voteState === 'down' 
-              ? 'text-red-600 font-medium' 
-              : 'text-gray-600 hover:text-red-600 dark:text-stone-300'
-          }`}
-          aria-label={voteState === 'down' ? 'Remove downvote' : 'Downvote'}
+          onClick={(e) => handleVoteClick(false, e)} 
+          disabled={isVoting} 
+          className={`flex items-center space-x-1 hover:text-red-500 disabled:opacity-50 ${voteState === 'down' ? 'text-red-500' : ''}`}
         >
-          <ThumbsDown 
-            size={15}
-            className={`transition-all ${voteState === 'down' ? 'fill-current' : ''}`}
-          />
-          <span className="ml-1">{currentPost.Downvotes || 0}</span>
+          <ThumbsDown size={16} />
+          <span className="text-xs">{post.downvotes || 0}</span>
         </button>
-        
-        <div className="flex items-center ml-4 text-gray-400">
-          <MessageCircle size={15} />
-          <span className="ml-1">{currentPost.CommentCount || 0}</span>
+        <div className="flex items-center space-x-1">
+            <MessageCircle size={16} /> 
+            <span className="text-xs">{post.commentCount || 0} comments</span>
         </div>
-        
-        <div className="flex items-center ml-auto">
-          <span className={currentPost.Karma >= 0 ? 'text-green-500' : 'text-red-500'}>
-            karma: {currentPost.Karma || 0}
-          </span>
+        {/* Display Karma */}
+        <div className="flex items-center space-x-1 text-xs font-semibold">
+            <span>Karma:</span> 
+            <span>{post.karma != null ? post.karma : 0}</span> {/* Display karma, default to 0 if null/undefined */}
         </div>
       </div>
     </div>
   );
+};
+
+// Add PropTypes validation
+PostCard.propTypes = {
+  post: PropTypes.shape({
+    ID: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    title: PropTypes.string,
+    Content: PropTypes.string,
+    createdAt: PropTypes.string,
+    authorUsername: PropTypes.string,
+    userVotes: PropTypes.object,
+    currentUserVote: PropTypes.string,
+    upvotes: PropTypes.number,
+    downvotes: PropTypes.number,
+    commentCount: PropTypes.number,
+    karma: PropTypes.number,
+    subredditName: PropTypes.string,
+    subredditId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  }).isRequired
 };
 
 export default Home;

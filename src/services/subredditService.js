@@ -19,7 +19,8 @@ export const subredditService = {
     },
 
     getPosts: async (subredditId, authFetch) => {
-        const response = await authFetch(`${config.apiUrl}/post?subredditId=${subredditId}`);
+        const url = `${config.apiUrl}/post?subredditId=${subredditId}`;
+        const response = await authFetch(url, { bypassCache: true });
         if (!response.ok) {
             throw new Error("Failed to load posts");
         }
