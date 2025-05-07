@@ -61,6 +61,10 @@ export function useJoinSubredditMutation (options = {}) {
             }
             // Still invalidate subreddit details to update member count
             queryClient.invalidateQueries({ queryKey: ['subreddit', subredditId] });
+            // Invalidate user's profile to update their list of memberships
+            if (currentUser?.id) {
+                queryClient.invalidateQueries({ queryKey: ['userProfile', currentUser.id] });
+            }
             
             options.onSuccess?.(data, subredditId, context);
         },
@@ -89,6 +93,10 @@ export function useCreateSubredditMutation (options = {}) {
             console.log('Subreddit created successfully:', data);
             // Invalidate the query that lists all subreddits (e.g., on Profile page)
             queryClient.invalidateQueries({ queryKey: ['subreddits'] }); 
+            // Invalidate user's profile to update their list of memberships as they are auto-added
+            if (currentUser?.id) {
+                queryClient.invalidateQueries({ queryKey: ['userProfile', currentUser.id] });
+            }
             // Navigate to the newly created subreddit
             navigate(`/r/${data.id}`);
             options.onSuccess?.(data, variables, context);
